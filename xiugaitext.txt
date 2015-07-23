@@ -1,0 +1,139 @@
+if(modnum==3)
+{
+	if(y_value<(-140)) 
+		{
+			w_shake_status++;
+			n_shake_status=0;
+			e_shake_status=0;
+			s_shake_status=0;
+			if(w_shake_status>=Shake_status_num) 
+			{
+				w_shake_status=0;
+				shake_flag=3;
+			}  
+			goto Shake_status;
+		} 
+		if(y_value>140)
+		{
+			w_shake_status=0;
+			n_shake_status=0;
+			e_shake_status++;
+			s_shake_status=0;
+			if(e_shake_status>=Shake_status_num) 
+			{
+				e_shake_status=0;
+				shake_flag=4;
+			} 
+			goto Shake_status;
+		}  
+		if(x_value>-100) 
+		{
+			w_shake_status=0;
+			n_shake_status++;
+			e_shake_status=0;
+			s_shake_status=0;
+			if(n_shake_status>=Shake_status_num) 
+			{
+				n_shake_status=0;
+				shake_flag=1;
+			}  
+			goto Shake_status;
+		}
+		if(x_value<(-400)) 
+		{
+			w_shake_status=0;
+			n_shake_status=0;
+			e_shake_status=0;
+			s_shake_status++;
+			if(s_shake_status>=Shake_status_num) 
+			{
+				s_shake_status=0;
+				shake_flag=2;
+			} 
+			goto Shake_status;
+		}
+}
+
+
+
+//*********************************************************
+	if(y_value<(-400)) 
+	{
+		w_shake_status++;
+		n_shake_status=0;
+		e_shake_status=0;
+		s_shake_status=0;
+		if(w_shake_status>=Shake_status_num) 
+		{
+			w_shake_status=0;
+			switch(modnum)
+			{
+				case 0: shake_flag=2;break;
+				case 1:	shake_flag=4;break;
+				case 2:	shake_flag=1;break;
+				case 3:	shake_flag=3;break;
+				default:break; 
+			}
+		}  
+		goto Shake_status;
+	} 
+	if(y_value>400)
+	{
+		w_shake_status=0;
+		n_shake_status=0;
+		e_shake_status++;
+		s_shake_status=0;
+		if(e_shake_status>=Shake_status_num) 
+		{
+			e_shake_status=0;
+			switch(modnum)
+			{
+				case 0: shake_flag=1;break;
+				case 1:	shake_flag=3;break;
+				case 2:	shake_flag=2;break;
+				case 3:	shake_flag=4;break;
+				default:break; 
+			}
+		} 
+		goto Shake_status;
+	}  
+	if(x_value>350) 
+	{
+		w_shake_status=0;
+		n_shake_status++;
+		e_shake_status=0;
+		s_shake_status=0;
+		if(n_shake_status>=Shake_status_num) 
+		{
+			n_shake_status=0;
+			switch(modnum)
+			{
+				case 0: shake_flag=3;break;
+				case 1:	shake_flag=2;break;
+				case 2:	shake_flag=4;break;
+				case 3:	shake_flag=1;break;
+				default:break; 
+			}
+		}  
+		goto Shake_status;
+	}
+	if(x_value<(-350)) 
+	{
+		w_shake_status=0;
+		n_shake_status=0;
+		e_shake_status=0;
+		s_shake_status++;
+		if(s_shake_status>=Shake_status_num) 
+		{
+			s_shake_status=0;
+			switch(modnum)
+			{
+				case 0: shake_flag=4;break;
+				case 1:	shake_flag=1;break;
+				case 2:	shake_flag=3;break;
+				case 3:	shake_flag=2;break;
+				default:break; 
+			}
+		} 
+		goto Shake_status;
+	}

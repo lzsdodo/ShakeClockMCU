@@ -1,0 +1,388 @@
+<html>
+<body>
+<pre>
+<h1>礦ision Build Log</h1>
+<h2>Project:</h2>
+D:\课件\竞赛\Ican\程序\2013-9-25-11-55-修改\GG_Already\ceshi.uvproj
+Project File Date:  09/22/2013
+
+<h2>Output:</h2>
+Build target 'Target 1'
+assembling STARTUP.A51...
+compiling main.c...
+D:\KEIL\C51\INC\ATMEL\REG51.H(13): error C231: 'P0': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(14): error C231: 'P1': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(15): error C231: 'P2': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(16): error C231: 'P3': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(17): error C231: 'PSW': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(18): error C231: 'ACC': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(19): error C231: 'B': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(20): error C231: 'SP': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(21): error C231: 'DPL': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(22): error C231: 'DPH': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(23): error C231: 'PCON': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(24): error C231: 'TCON': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(25): error C231: 'TMOD': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(26): error C231: 'TL0': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(27): error C231: 'TL1': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(28): error C231: 'TH0': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(29): error C231: 'TH1': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(30): error C231: 'IE': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(31): error C231: 'IP': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(32): error C231: 'SCON': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(33): error C231: 'SBUF': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(38): error C231: 'CY': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(39): error C231: 'AC': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(40): error C231: 'F0': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(41): error C231: 'RS1': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(42): error C231: 'RS0': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(43): error C231: 'OV': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(44): error C231: 'P': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(47): error C231: 'TF1': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(48): error C231: 'TR1': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(49): error C231: 'TF0': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(50): error C231: 'TR0': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(51): error C231: 'IE1': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(52): error C231: 'IT1': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(53): error C231: 'IE0': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(54): error C231: 'IT0': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(57): error C231: 'EA': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(58): error C231: 'ES': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(59): error C231: 'ET1': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(60): error C231: 'EX1': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(61): error C231: 'ET0': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(62): error C231: 'EX0': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(65): error C231: 'PS': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(66): error C231: 'PT1': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(67): error C231: 'PX1': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(68): error C231: 'PT0': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(69): error C231: 'PX0': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(72): error C231: 'RD': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(73): error C231: 'WR': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(74): error C231: 'T1': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(75): error C231: 'T0': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(76): error C231: 'INT1': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(77): error C231: 'INT0': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(78): error C231: 'TXD': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(79): error C231: 'RXD': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(82): error C231: 'SM0': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(83): error C231: 'SM1': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(84): error C231: 'SM2': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(85): error C231: 'REN': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(86): error C231: 'TB8': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(87): error C231: 'RB8': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(88): error C231: 'TI': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(89): error C231: 'RI': redefinition
+MAIN.C(332): error C187: not an lvalue
+MAIN.C(338): error C187: not an lvalue
+MAIN.C(343): error C187: not an lvalue
+MAIN.C(363): error C187: not an lvalue
+MAIN.C(375): error C187: not an lvalue
+MAIN.C(387): error C187: not an lvalue
+MAIN.C(412): error C187: not an lvalue
+MAIN.C(418): error C187: not an lvalue
+MAIN.C(425): error C187: not an lvalue
+MAIN.C(440): error C187: not an lvalue
+MAIN.C(460): error C187: not an lvalue
+MAIN.C(480): error C187: not an lvalue
+MAIN.C(514): error C187: not an lvalue
+MAIN.C(520): error C187: not an lvalue
+MAIN.C(540): error C187: not an lvalue
+MAIN.C(552): error C187: not an lvalue
+MAIN.C(974): error C187: not an lvalue
+compiling LCD.c...
+compiling font.c...
+compiling I2C.c...
+compiling delay.c...
+Target not created
+Build target 'Target 1'
+assembling STARTUP.A51...
+compiling main.c...
+D:\KEIL\C51\INC\ATMEL\REG51.H(13): error C231: 'P0': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(14): error C231: 'P1': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(15): error C231: 'P2': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(16): error C231: 'P3': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(17): error C231: 'PSW': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(18): error C231: 'ACC': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(19): error C231: 'B': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(20): error C231: 'SP': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(21): error C231: 'DPL': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(22): error C231: 'DPH': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(23): error C231: 'PCON': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(24): error C231: 'TCON': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(25): error C231: 'TMOD': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(26): error C231: 'TL0': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(27): error C231: 'TL1': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(28): error C231: 'TH0': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(29): error C231: 'TH1': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(30): error C231: 'IE': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(31): error C231: 'IP': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(32): error C231: 'SCON': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(33): error C231: 'SBUF': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(38): error C231: 'CY': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(39): error C231: 'AC': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(40): error C231: 'F0': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(41): error C231: 'RS1': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(42): error C231: 'RS0': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(43): error C231: 'OV': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(44): error C231: 'P': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(47): error C231: 'TF1': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(48): error C231: 'TR1': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(49): error C231: 'TF0': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(50): error C231: 'TR0': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(51): error C231: 'IE1': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(52): error C231: 'IT1': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(53): error C231: 'IE0': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(54): error C231: 'IT0': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(57): error C231: 'EA': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(58): error C231: 'ES': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(59): error C231: 'ET1': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(60): error C231: 'EX1': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(61): error C231: 'ET0': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(62): error C231: 'EX0': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(65): error C231: 'PS': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(66): error C231: 'PT1': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(67): error C231: 'PX1': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(68): error C231: 'PT0': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(69): error C231: 'PX0': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(72): error C231: 'RD': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(73): error C231: 'WR': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(74): error C231: 'T1': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(75): error C231: 'T0': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(76): error C231: 'INT1': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(77): error C231: 'INT0': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(78): error C231: 'TXD': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(79): error C231: 'RXD': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(82): error C231: 'SM0': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(83): error C231: 'SM1': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(84): error C231: 'SM2': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(85): error C231: 'REN': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(86): error C231: 'TB8': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(87): error C231: 'RB8': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(88): error C231: 'TI': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(89): error C231: 'RI': redefinition
+MAIN.C(332): error C187: not an lvalue
+MAIN.C(338): error C187: not an lvalue
+MAIN.C(343): error C187: not an lvalue
+MAIN.C(363): error C187: not an lvalue
+MAIN.C(375): error C187: not an lvalue
+MAIN.C(387): error C187: not an lvalue
+MAIN.C(412): error C187: not an lvalue
+MAIN.C(418): error C187: not an lvalue
+MAIN.C(425): error C187: not an lvalue
+MAIN.C(440): error C187: not an lvalue
+MAIN.C(460): error C187: not an lvalue
+MAIN.C(480): error C187: not an lvalue
+MAIN.C(514): error C187: not an lvalue
+MAIN.C(520): error C187: not an lvalue
+MAIN.C(540): error C187: not an lvalue
+MAIN.C(552): error C187: not an lvalue
+MAIN.C(974): error C187: not an lvalue
+compiling LCD.c...
+compiling font.c...
+compiling I2C.c...
+compiling delay.c...
+D:\KEIL\C51\INC\ATMEL\REG51.H(13): error C231: 'P0': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(14): error C231: 'P1': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(15): error C231: 'P2': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(16): error C231: 'P3': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(17): error C231: 'PSW': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(18): error C231: 'ACC': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(19): error C231: 'B': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(20): error C231: 'SP': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(21): error C231: 'DPL': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(22): error C231: 'DPH': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(23): error C231: 'PCON': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(24): error C231: 'TCON': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(25): error C231: 'TMOD': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(26): error C231: 'TL0': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(27): error C231: 'TL1': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(28): error C231: 'TH0': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(29): error C231: 'TH1': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(30): error C231: 'IE': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(31): error C231: 'IP': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(32): error C231: 'SCON': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(33): error C231: 'SBUF': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(38): error C231: 'CY': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(39): error C231: 'AC': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(40): error C231: 'F0': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(41): error C231: 'RS1': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(42): error C231: 'RS0': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(43): error C231: 'OV': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(44): error C231: 'P': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(47): error C231: 'TF1': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(48): error C231: 'TR1': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(49): error C231: 'TF0': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(50): error C231: 'TR0': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(51): error C231: 'IE1': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(52): error C231: 'IT1': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(53): error C231: 'IE0': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(54): error C231: 'IT0': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(57): error C231: 'EA': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(58): error C231: 'ES': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(59): error C231: 'ET1': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(60): error C231: 'EX1': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(61): error C231: 'ET0': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(62): error C231: 'EX0': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(65): error C231: 'PS': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(66): error C231: 'PT1': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(67): error C231: 'PX1': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(68): error C231: 'PT0': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(69): error C231: 'PX0': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(72): error C231: 'RD': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(73): error C231: 'WR': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(74): error C231: 'T1': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(75): error C231: 'T0': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(76): error C231: 'INT1': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(77): error C231: 'INT0': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(78): error C231: 'TXD': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(79): error C231: 'RXD': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(82): error C231: 'SM0': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(83): error C231: 'SM1': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(84): error C231: 'SM2': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(85): error C231: 'REN': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(86): error C231: 'TB8': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(87): error C231: 'RB8': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(88): error C231: 'TI': redefinition
+D:\KEIL\C51\INC\ATMEL\REG51.H(89): error C231: 'RI': redefinition
+Target not created
+Build target 'Target 1'
+assembling STARTUP.A51...
+compiling main.c...
+compiling LCD.c...
+compiling font.c...
+compiling I2C.c...
+compiling delay.c...
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_SINGLE_READ_ADXL345?MAIN
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?DELAY_10US?DELAY
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_DELAY_1MS?DELAY
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_DELAY_10MS?DELAY
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_DELAY_50MS?DELAY
+Program Size: data=10.6 xdata=99 code=15384
+creating hex file from "ceshi"...
+"ceshi" - 0 Error(s), 5 Warning(s).
+Build target 'Target 1'
+assembling STARTUP.A51...
+compiling main.c...
+compiling LCD.c...
+compiling font.c...
+compiling I2C.c...
+compiling delay.c...
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_SINGLE_READ_ADXL345?MAIN
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?DELAY_10US?DELAY
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_DELAY_50MS?DELAY
+Program Size: data=10.6 xdata=99 code=15384
+creating hex file from "ceshi"...
+"ceshi" - 0 Error(s), 3 Warning(s).
+Build target 'Target 1'
+assembling STARTUP.A51...
+compiling main.c...
+compiling LCD.c...
+compiling font.c...
+compiling I2C.c...
+compiling delay.c...
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_SINGLE_READ_ADXL345?MAIN
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?DELAY_10US?DELAY
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_DELAY_50MS?DELAY
+Program Size: data=10.6 xdata=99 code=15384
+creating hex file from "ceshi"...
+"ceshi" - 0 Error(s), 3 Warning(s).
+Build target 'Target 1'
+assembling STARTUP.A51...
+compiling main.c...
+compiling LCD.c...
+compiling font.c...
+compiling I2C.c...
+compiling delay.c...
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_SINGLE_READ_ADXL345?MAIN
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?DELAY_10US?DELAY
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_DELAY_50MS?DELAY
+Program Size: data=10.6 xdata=99 code=15384
+creating hex file from "ceshi"...
+"ceshi" - 0 Error(s), 3 Warning(s).
+Build target 'Target 1'
+assembling STARTUP.A51...
+compiling main.c...
+compiling LCD.c...
+compiling font.c...
+compiling I2C.c...
+compiling delay.c...
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_SINGLE_READ_ADXL345?MAIN
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?DELAY_10US?DELAY
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_DELAY_50MS?DELAY
+Program Size: data=10.6 xdata=99 code=15384
+creating hex file from "ceshi"...
+"ceshi" - 0 Error(s), 3 Warning(s).
+Build target 'Target 1'
+assembling STARTUP.A51...
+compiling main.c...
+compiling LCD.c...
+compiling font.c...
+compiling I2C.c...
+compiling delay.c...
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_SINGLE_READ_ADXL345?MAIN
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?DELAY_10US?DELAY
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_DELAY_50MS?DELAY
+Program Size: data=10.6 xdata=99 code=15384
+creating hex file from "ceshi"...
+"ceshi" - 0 Error(s), 3 Warning(s).
+Build target 'Target 1'
+assembling STARTUP.A51...
+compiling main.c...
+compiling LCD.c...
+compiling font.c...
+compiling I2C.c...
+compiling delay.c...
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_SINGLE_READ_ADXL345?MAIN
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?DELAY_10US?DELAY
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_DELAY_50MS?DELAY
+Program Size: data=10.6 xdata=99 code=15384
+creating hex file from "ceshi"...
+"ceshi" - 0 Error(s), 3 Warning(s).
+Build target 'Target 1'
+assembling STARTUP.A51...
+compiling main.c...
+compiling LCD.c...
+compiling font.c...
+compiling I2C.c...
+compiling delay.c...
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_SINGLE_READ_ADXL345?MAIN
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?DELAY_10US?DELAY
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_DELAY_50MS?DELAY
+Program Size: data=10.6 xdata=99 code=15384
+creating hex file from "ceshi"...
+"ceshi" - 0 Error(s), 3 Warning(s).

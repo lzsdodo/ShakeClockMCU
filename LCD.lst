@@ -1,0 +1,484 @@
+C51 COMPILER V9.01   LCD                                                                   09/25/2013 12:07:04 PAGE 1   
+
+
+C51 COMPILER V9.01, COMPILATION OF MODULE LCD
+OBJECT MODULE PLACED IN LCD.obj
+COMPILER INVOKED BY: D:\Keil\C51\BIN\C51.EXE LCD\LCD.c LARGE BROWSE DEBUG OBJECTEXTEND PRINT(.\LCD.lst) OBJECT(LCD.obj)
+
+line level    source
+
+   1          #include <reg52.h>
+   2          #include <intrins.h>
+   3          #include <font\font.h>
+   4          #include <lcd\lcd.h>
+   5          
+   6          void delayms(int count)  // /* X1ms */
+   7          {
+   8   1              int i,j;
+   9   1              for(i=0;i<count;i++)
+  10   1                      for(j=0;j<1000;j++);
+  11   1      }
+  12          
+  13          unsigned char bdata bitdata;
+  14          sbit bit7=bitdata^7;
+  15          sbit bit6=bitdata^6;
+  16          sbit bit5=bitdata^5;
+  17          sbit bit4=bitdata^4;
+  18          sbit bit3=bitdata^3;
+  19          sbit bit2=bitdata^2;
+  20          sbit bit1=bitdata^1;
+  21          sbit bit0=bitdata^0;
+  22          
+  23          unsigned int BACK_COLOR, POINT_COLOR;   //背景色，画笔色          
+  24          void LCD_Writ_Bus(char da)   //串行数据写入
+  25          {       
+  26   1              bitdata=da;
+  27   1              LCD_SDA=bit7;LCD_SCK=0;LCD_SCK=1;
+  28   1              LCD_SDA=bit6;LCD_SCK=0;LCD_SCK=1;
+  29   1              LCD_SDA=bit5;LCD_SCK=0;LCD_SCK=1;
+  30   1              LCD_SDA=bit4;LCD_SCK=0;LCD_SCK=1;
+  31   1              LCD_SDA=bit3;LCD_SCK=0;LCD_SCK=1;
+  32   1              LCD_SDA=bit2;LCD_SCK=0;LCD_SCK=1;
+  33   1              LCD_SDA=bit1;LCD_SCK=0;LCD_SCK=1;
+  34   1              LCD_SDA=bit0;LCD_SCK=0;LCD_SCK=1; 
+  35   1      } 
+  36          void LCD_WR_DATA8(char da) //发送数据-8位参数
+  37          {
+  38   1          LCD_AO=1;
+  39   1              LCD_Writ_Bus(da);
+  40   1      }  
+  41           void LCD_WR_DATA(int da)
+  42          {
+  43   1          LCD_AO=1;
+  44   1              LCD_Writ_Bus(da>>8);
+  45   1              LCD_Writ_Bus(da);
+  46   1      }         
+  47          void LCD_WR_REG(char da)         
+  48          {
+  49   1          LCD_AO=0;
+  50   1              LCD_Writ_Bus(da);
+  51   1      }
+  52           void LCD_WR_REG_DATA(int reg,int da)
+  53          {
+  54   1          LCD_WR_REG(reg);
+  55   1              LCD_WR_DATA(da);
+C51 COMPILER V9.01   LCD                                                                   09/25/2013 12:07:04 PAGE 2   
+
+  56   1      }
+  57          void Address_set(unsigned int x1,unsigned int y1,unsigned int x2,unsigned int y2)
+  58          {  
+  59   1         LCD_WR_REG(0x2a);
+  60   1         LCD_WR_DATA8(x1>>8);
+  61   1         LCD_WR_DATA8(x1);
+  62   1         LCD_WR_DATA8(x2>>8);
+  63   1         LCD_WR_DATA8(x2);
+  64   1        
+  65   1         LCD_WR_REG(0x2b);
+  66   1         LCD_WR_DATA8(y1>>8);
+  67   1         LCD_WR_DATA8(y1);
+  68   1         LCD_WR_DATA8(y2>>8);
+  69   1         LCD_WR_DATA8(y2);
+  70   1      
+  71   1         LCD_WR_REG(0x2C);
+  72   1      
+  73   1      }
+  74          void Lcd_Init(void)
+  75          {
+  76   1      
+  77   1      //调用一次这些函数，免得编译的时候提示警告
+  78   1              LCD_CS =1;
+  79   1              if(LCD_CS==0)
+  80   1              {
+  81   2                 LCD_WR_REG_DATA(0,0);
+  82   2               }
+  83   1      
+  84   1          LCD_REST=1;
+  85   1          delayms(5); 
+  86   1              LCD_REST=0;
+  87   1              delayms(5);
+  88   1              LCD_REST=1;
+  89   1              LCD_CS=1; 
+  90   1              delayms(5);
+  91   1              LCD_CS =0;  //打开片选使能
+  92   1      
+  93   1              LCD_WR_REG(0x11); //Sleep out
+  94   1              delayms(120); //Delay 120ms
+  95   1              //------------------------------------ST7735S Frame Rate-----------------------------------------//
+  96   1              LCD_WR_REG(0xB1);
+  97   1              LCD_WR_DATA8(0x05);
+  98   1              LCD_WR_DATA8(0x3C);
+  99   1              LCD_WR_DATA8(0x3C);
+ 100   1              LCD_WR_REG(0xB2);
+ 101   1              LCD_WR_DATA8(0x05);
+ 102   1              LCD_WR_DATA8(0x3C);
+ 103   1              LCD_WR_DATA8(0x3C);
+ 104   1              LCD_WR_REG(0xB3);
+ 105   1              LCD_WR_DATA8(0x05);
+ 106   1              LCD_WR_DATA8(0x3C);
+ 107   1              LCD_WR_DATA8(0x3C);
+ 108   1              LCD_WR_DATA8(0x05);
+ 109   1              LCD_WR_DATA8(0x3C);
+ 110   1              LCD_WR_DATA8(0x3C);
+ 111   1              //------------------------------------End ST7735S Frame Rate-----------------------------------------//
+ 112   1              LCD_WR_REG(0xB4); //Dot inversion
+ 113   1              LCD_WR_DATA8(0x03);
+ 114   1              LCD_WR_REG(0xC0);
+ 115   1              LCD_WR_DATA8(0x28);
+ 116   1              LCD_WR_DATA8(0x08);
+ 117   1              LCD_WR_DATA8(0x04);
+C51 COMPILER V9.01   LCD                                                                   09/25/2013 12:07:04 PAGE 3   
+
+ 118   1              LCD_WR_REG(0xC1);
+ 119   1              LCD_WR_DATA8(0XC0);
+ 120   1              LCD_WR_REG(0xC2);
+ 121   1              LCD_WR_DATA8(0x0D);
+ 122   1              LCD_WR_DATA8(0x00);
+ 123   1              LCD_WR_REG(0xC3);
+ 124   1              LCD_WR_DATA8(0x8D);
+ 125   1              LCD_WR_DATA8(0x2A);
+ 126   1              LCD_WR_REG(0xC4);
+ 127   1              LCD_WR_DATA8(0x8D);
+ 128   1              LCD_WR_DATA8(0xEE);
+ 129   1              //---------------------------------End ST7735S Power Sequence-------------------------------------//
+ 130   1              LCD_WR_REG(0xC5); //VCOM
+ 131   1              LCD_WR_DATA8(0x1A);
+ 132   1              LCD_WR_REG(0x36); //MX, MY, RGB mode
+ 133   1              LCD_WR_DATA8(0xC0);
+ 134   1              //------------------------------------ST7735S Gamma Sequence-----------------------------------------//
+ 135   1              LCD_WR_REG(0xE0);
+ 136   1              LCD_WR_DATA8(0x04);
+ 137   1              LCD_WR_DATA8(0x22);
+ 138   1              LCD_WR_DATA8(0x07);
+ 139   1              LCD_WR_DATA8(0x0A);
+ 140   1              LCD_WR_DATA8(0x2E);
+ 141   1              LCD_WR_DATA8(0x30);
+ 142   1              LCD_WR_DATA8(0x25);
+ 143   1              LCD_WR_DATA8(0x2A);
+ 144   1              LCD_WR_DATA8(0x28);
+ 145   1              LCD_WR_DATA8(0x26);
+ 146   1              LCD_WR_DATA8(0x2E);
+ 147   1              LCD_WR_DATA8(0x3A);
+ 148   1              LCD_WR_DATA8(0x00);
+ 149   1              LCD_WR_DATA8(0x01);
+ 150   1              LCD_WR_DATA8(0x03);
+ 151   1              LCD_WR_DATA8(0x13);
+ 152   1              LCD_WR_REG(0xE1);
+ 153   1              LCD_WR_DATA8(0x04);
+ 154   1              LCD_WR_DATA8(0x16);
+ 155   1              LCD_WR_DATA8(0x06);
+ 156   1              LCD_WR_DATA8(0x0D);
+ 157   1              LCD_WR_DATA8(0x2D);
+ 158   1              LCD_WR_DATA8(0x26);
+ 159   1              LCD_WR_DATA8(0x23);
+ 160   1              LCD_WR_DATA8(0x27);
+ 161   1              LCD_WR_DATA8(0x27);
+ 162   1              LCD_WR_DATA8(0x25);
+ 163   1              LCD_WR_DATA8(0x2D);
+ 164   1              LCD_WR_DATA8(0x3B);
+ 165   1              LCD_WR_DATA8(0x00);
+ 166   1              LCD_WR_DATA8(0x01);
+ 167   1              LCD_WR_DATA8(0x04);
+ 168   1              LCD_WR_DATA8(0x13);
+ 169   1              //------------------------------------End ST7735S Gamma Sequence-----------------------------------------
+             -//
+ 170   1              LCD_WR_REG(0x3A); //65k mode
+ 171   1              LCD_WR_DATA8(0x05);
+ 172   1              LCD_WR_REG(0x29); //Display on
+ 173   1      
+ 174   1      }
+ 175          //清屏函数
+ 176          //Color:要清屏的填充色
+ 177          void LCD_Clear(unsigned int Color)
+ 178          {
+C51 COMPILER V9.01   LCD                                                                   09/25/2013 12:07:04 PAGE 4   
+
+ 179   1              unsigned char VH,VL;
+ 180   1              unsigned int i,j;
+ 181   1              VH=Color>>8;
+ 182   1              VL=Color;       
+ 183   1              Address_set(0,0,LCD_W-1,LCD_H-1);
+ 184   1          for(i=0;i<LCD_W;i++)
+ 185   1               {
+ 186   2                for (j=0;j<LCD_H;j++)
+ 187   2                      {
+ 188   3                       LCD_WR_DATA8(VH);
+ 189   3                               LCD_WR_DATA8(VL);      
+ 190   3                  }
+ 191   2                }
+ 192   1      }
+ 193          
+ 194           //***************************************测试程序********************************************************
+             -**********************
+ 195          //在指定位置显示一个汉字(32*33大小)
+ 196          //dcolor为内容颜色，gbcolor为背静颜色
+ 197          void showhanzi(unsigned int x,unsigned int y,unsigned char index)       
+ 198          {  
+ 199   1              unsigned char i,j;
+ 200   1              unsigned char *temp=hanzi;  
+ 201   1              POINT_COLOR=WHITE;  
+ 202   1          Address_set(x,y,x+31,y+31); //设置区域      
+ 203   1              temp+=index*128;        
+ 204   1              for(j=0;j<128;j++)
+ 205   1              {
+ 206   2                      for(i=0;i<8;i++)
+ 207   2                      {                    
+ 208   3                              if((*temp&(1<<i))!=0)
+ 209   3                              {
+ 210   4                                      LCD_WR_DATA(POINT_COLOR);
+ 211   4                              } 
+ 212   3                              else
+ 213   3                              {
+ 214   4                                      LCD_WR_DATA(BACK_COLOR);
+ 215   4                              }   
+ 216   3                      }
+ 217   2                      temp++;
+ 218   2               }
+ 219   1      }
+ 220          
+ 221          //***************测试数字
+ 222          void w_LCD_ShowNum(unsigned int x,unsigned int y,unsigned char index)
+ 223          {
+ 224   1              unsigned char i,j;
+ 225   1              unsigned char *temp=w_num;
+ 226   1              POINT_COLOR=WHITE;       
+ 227   1              Address_set(x,y,x+31,y+15); //设置区域
+ 228   1              temp+=index*64;  
+ 229   1              for(j=0;j<64;j++)
+ 230   1              {
+ 231   2                      for(i=0;i<8;i++)
+ 232   2                              {                    
+ 233   3                                      if((*temp&(1<<i))!=0)
+ 234   3                                      {
+ 235   4                                              LCD_WR_DATA(POINT_COLOR);
+ 236   4                                      } 
+ 237   3                                      else
+ 238   3                                      {
+ 239   4                                              LCD_WR_DATA(BACK_COLOR);
+C51 COMPILER V9.01   LCD                                                                   09/25/2013 12:07:04 PAGE 5   
+
+ 240   4                                      }   
+ 241   3                              }
+ 242   2                              temp++;
+ 243   2              }       
+ 244   1      }
+ 245          void we_position(unsigned int x,unsigned int y,unsigned char index)
+ 246          {
+ 247   1              unsigned char i,j;
+ 248   1              unsigned char *temp=xiugai;
+ 249   1              POINT_COLOR=WHITE;       
+ 250   1              Address_set(x,y,x+3,y+15); //设置区域
+ 251   1              temp+=index*8;  
+ 252   1              for(j=0;j<8;j++)
+ 253   1              {
+ 254   2                      for(i=0;i<8;i++)
+ 255   2                              {                    
+ 256   3                                      if((*temp&(1<<i))!=0)
+ 257   3                                      {
+ 258   4                                              LCD_WR_DATA(POINT_COLOR);
+ 259   4                                      } 
+ 260   3                                      else
+ 261   3                                      {
+ 262   4                                              LCD_WR_DATA(BACK_COLOR);
+ 263   4                                      }   
+ 264   3                              }
+ 265   2                              temp++;
+ 266   2              }       
+ 267   1      }
+ 268          void we_clear(unsigned int x,unsigned int y,unsigned char index)
+ 269          {
+ 270   1              unsigned char i,j;
+ 271   1              unsigned char *temp=xiugai;
+ 272   1              POINT_COLOR=WHITE;       
+ 273   1              Address_set(x,y,x+3,y+127); //设置区域
+ 274   1              temp+=index*64;  
+ 275   1              for(j=0;j<64;j++)
+ 276   1              {
+ 277   2                      for(i=0;i<8;i++)
+ 278   2                              {                    
+ 279   3                                      if((*temp&(1<<i))!=0)
+ 280   3                                      {
+ 281   4                                              LCD_WR_DATA(POINT_COLOR);
+ 282   4                                      } 
+ 283   3                                      else
+ 284   3                                      {
+ 285   4                                              LCD_WR_DATA(BACK_COLOR);
+ 286   4                                      }   
+ 287   3                              }
+ 288   2                              temp++;
+ 289   2              }       
+ 290   1      }
+ 291          
+ 292          void e_LCD_ShowNum(unsigned int x,unsigned int y,unsigned char index)
+ 293          {
+ 294   1              unsigned char i,j;
+ 295   1              unsigned char *temp=e_num;
+ 296   1              POINT_COLOR=WHITE;
+ 297   1              Address_set(x,y,x+31,y+15); //设置区域
+ 298   1              temp+=index*64;  
+ 299   1              for(j=0;j<64;j++)
+ 300   1              {
+ 301   2                      for(i=0;i<8;i++)
+C51 COMPILER V9.01   LCD                                                                   09/25/2013 12:07:04 PAGE 6   
+
+ 302   2                              {                    
+ 303   3                                      if((*temp&(1<<i))!=0)
+ 304   3                                      {
+ 305   4                                              LCD_WR_DATA(POINT_COLOR);
+ 306   4                                      } 
+ 307   3                                      else
+ 308   3                                      {
+ 309   4                                              LCD_WR_DATA(BACK_COLOR);
+ 310   4                                      }   
+ 311   3                              }
+ 312   2                              temp++;
+ 313   2              }       
+ 314   1      }
+ 315          
+ 316          void s_LCD_ShowNum(unsigned int x,unsigned int y,unsigned char index)
+ 317          {
+ 318   1              unsigned char i,j;
+ 319   1              unsigned char *temp=s_num;
+ 320   1              POINT_COLOR=WHITE;
+ 321   1              Address_set(x,y,x+15,y+31); //设置区域
+ 322   1              temp+=index*64;  
+ 323   1              for(j=0;j<64;j++)
+ 324   1              {
+ 325   2                      for(i=0;i<8;i++)
+ 326   2                              {                    
+ 327   3                                      if((*temp&(1<<i))!=0)
+ 328   3                                      {
+ 329   4                                              LCD_WR_DATA(POINT_COLOR);
+ 330   4                                      } 
+ 331   3                                      else
+ 332   3                                      {
+ 333   4                                              LCD_WR_DATA(BACK_COLOR);
+ 334   4                                      }   
+ 335   3                              }
+ 336   2                              temp++;
+ 337   2              }       
+ 338   1      }
+ 339          
+ 340          void n_LCD_ShowNum(unsigned int x,unsigned int y,unsigned char index)
+ 341          {
+ 342   1              unsigned char i,j;
+ 343   1              unsigned char *temp=n_num;
+ 344   1              POINT_COLOR=WHITE;
+ 345   1              Address_set(x,y,x+15,y+31); //设置区域
+ 346   1              temp+=index*64;  
+ 347   1              for(j=0;j<64;j++)
+ 348   1              {
+ 349   2                      for(i=0;i<8;i++)
+ 350   2                              {                    
+ 351   3                                      if((*temp&(1<<i))!=0)
+ 352   3                                      {
+ 353   4                                              LCD_WR_DATA(POINT_COLOR);
+ 354   4                                      } 
+ 355   3                                      else
+ 356   3                                      {
+ 357   4                                              LCD_WR_DATA(BACK_COLOR);
+ 358   4                                      }   
+ 359   3                              }
+ 360   2                              temp++;
+ 361   2              }       
+ 362   1      }
+ 363          
+C51 COMPILER V9.01   LCD                                                                   09/25/2013 12:07:04 PAGE 7   
+
+ 364          void ns_position(unsigned int x,unsigned int y,unsigned char index)
+ 365          {
+ 366   1              unsigned char i,j;
+ 367   1              unsigned char *temp=xiugai;
+ 368   1              POINT_COLOR=WHITE;       
+ 369   1              Address_set(x,y,x+15,y+3); //设置区域
+ 370   1              temp+=index*8;  
+ 371   1              for(j=0;j<8;j++)
+ 372   1              {
+ 373   2                      for(i=0;i<8;i++)
+ 374   2                              {                    
+ 375   3                                      if((*temp&(1<<i))!=0)
+ 376   3                                      {
+ 377   4                                              LCD_WR_DATA(POINT_COLOR);
+ 378   4                                      } 
+ 379   3                                      else
+ 380   3                                      {
+ 381   4                                              LCD_WR_DATA(BACK_COLOR);
+ 382   4                                      }   
+ 383   3                              }
+ 384   2                              temp++;
+ 385   2              }       
+ 386   1      }
+ 387          void ns_clear(unsigned int x,unsigned int y,unsigned char index)
+ 388          {
+ 389   1              unsigned char i,j;
+ 390   1              unsigned char *temp=xiugai;
+ 391   1              POINT_COLOR=WHITE;       
+ 392   1              Address_set(x,y,x+79,y+3); //设置区域
+ 393   1              temp+=index*40;  
+ 394   1              for(j=0;j<40;j++)
+ 395   1              {
+ 396   2                      for(i=0;i<8;i++)
+ 397   2                              {                    
+ 398   3                                      if((*temp&(1<<i))!=0)
+ 399   3                                      {
+ 400   4                                              LCD_WR_DATA(POINT_COLOR);
+ 401   4                                      } 
+ 402   3                                      else
+ 403   3                                      {
+ 404   4                                              LCD_WR_DATA(BACK_COLOR);
+ 405   4                                      }   
+ 406   3                              }
+ 407   2                              temp++;
+ 408   2              }       
+ 409   1      }
+ 410          
+ 411          
+ 412          
+ 413          void showxuexiao(unsigned int x,unsigned int y,unsigned char index)
+ 414          {
+ 415   1              unsigned char i,j;
+ 416   1              unsigned char *temp=xuexiao;   
+ 417   1              POINT_COLOR=GRAY; 
+ 418   1          Address_set(x,y,x+15,y+15); //设置区域      
+ 419   1              temp+=index*32; 
+ 420   1              for(j=0;j<32;j++)
+ 421   1              {
+ 422   2                      for(i=0;i<8;i++)
+ 423   2                      {                    
+ 424   3                              if((*temp&(1<<i))!=0)
+ 425   3                              {
+C51 COMPILER V9.01   LCD                                                                   09/25/2013 12:07:04 PAGE 8   
+
+ 426   4                                      LCD_WR_DATA(POINT_COLOR);
+ 427   4                              } 
+ 428   3                              else
+ 429   3                              {
+ 430   4                                      LCD_WR_DATA(BACK_COLOR);
+ 431   4                              }   
+ 432   3                      }
+ 433   2                      temp++;
+ 434   2               }
+ 435   1              
+ 436   1      }
+ 437          //***************************************测试程序*********************************************************
+             -*********************
+ 438          
+ 439          
+ 440          
+ 441          
+ 442          
+ 443          
+ 444          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   2748    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =      4     109
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      1    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

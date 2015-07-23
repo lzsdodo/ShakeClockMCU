@@ -1,0 +1,8 @@
+"STARTUP.obj",
+"main.obj",
+"LCD.obj",
+"font.obj",
+"I2C.obj",
+"delay.obj" 
+TO "ceshi" 
+RAMSIZE(256) 

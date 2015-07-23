@@ -1,0 +1,147 @@
+C51 COMPILER V9.01   I2C                                                                   09/25/2013 12:07:04 PAGE 1   
+
+
+C51 COMPILER V9.01, COMPILATION OF MODULE I2C
+OBJECT MODULE PLACED IN I2C.obj
+COMPILER INVOKED BY: D:\Keil\C51\BIN\C51.EXE I2C\I2C.c LARGE BROWSE DEBUG OBJECTEXTEND PRINT(.\I2C.lst) OBJECT(I2C.obj)
+
+line level    source
+
+   1          #include <reg52.h>
+   2          #include <intrins.h>
+   3          #include "i2c.h"
+   4          
+   5          #define uchar unsigned char
+   6          
+   7          
+   8          
+   9          void E2P_delay()
+  10          {
+  11   1              _nop_(); 
+  12   1       }
+  13          void EEPROM_Init()
+  14          {
+  15   1              E2P_SCL=1;
+  16   1              E2P_delay();
+  17   1              E2P_SDA = 1;
+  18   1              E2P_delay();
+  19   1      }
+  20          void start()
+  21          {
+  22   1              E2P_SDA =       1;
+  23   1              E2P_delay();
+  24   1              E2P_SCL=1;
+  25   1              E2P_delay();
+  26   1              E2P_SDA=0;
+  27   1              E2P_delay();
+  28   1      }
+  29          
+  30          void stop()
+  31          {
+  32   1              E2P_SDA=0;
+  33   1              E2P_delay();
+  34   1              E2P_SCL=1;
+  35   1              E2P_delay();
+  36   1              E2P_SDA=1;
+  37   1              E2P_delay();
+  38   1      }
+  39          
+  40          void respons()
+  41          {
+  42   1              uchar i=0;
+  43   1              E2P_SCL=1;
+  44   1              E2P_delay();
+  45   1              while((E2P_SDA==1)&&(i<255))
+  46   1                                      i++;
+  47   1              E2P_SCL=0;
+  48   1              E2P_delay();
+  49   1      }
+  50          
+  51          void writebyte(uchar date)
+  52          {
+  53   1              uchar i,temp;
+  54   1              temp=date;
+  55   1              for(i=0;i<8;i++)
+C51 COMPILER V9.01   I2C                                                                   09/25/2013 12:07:04 PAGE 2   
+
+  56   1              {
+  57   2                      temp=temp<<1;
+  58   2                      E2P_SCL=0;
+  59   2                      E2P_delay();
+  60   2                      E2P_SDA=CY;
+  61   2                      E2P_delay();
+  62   2                      E2P_SCL=1;
+  63   2                      E2P_delay();
+  64   2              }
+  65   1              E2P_SCL=0;
+  66   1              E2P_delay();
+  67   1              E2P_SDA=1;
+  68   1              E2P_delay();
+  69   1      }
+  70          
+  71          uchar readbyte()
+  72          {
+  73   1              uchar i,j,k;
+  74   1              E2P_SCL=0;
+  75   1              E2P_delay();
+  76   1              E2P_SDA=1;
+  77   1              for(i=0;i<8;i++)
+  78   1              {
+  79   2                      E2P_SCL=1;
+  80   2                      E2P_delay();
+  81   2                      if(E2P_SDA==1)
+  82   2                              j=1;
+  83   2                      else
+  84   2                              j=0;
+  85   2                      k=(k<<1)|j;
+  86   2                      E2P_SCL=0;
+  87   2                      E2P_delay();
+  88   2              }
+  89   1              E2P_delay();
+  90   1              return k;
+  91   1      }
+  92          
+  93          void write_add(uchar address,uchar info)
+  94          {
+  95   1              start();
+  96   1              writebyte(0xa0);
+  97   1              respons();
+  98   1              writebyte(address);
+  99   1              respons();
+ 100   1              writebyte(info);
+ 101   1              respons();
+ 102   1              stop();
+ 103   1      }
+ 104          
+ 105          uchar read_add(uchar address)
+ 106          {
+ 107   1              uchar dd;
+ 108   1              start();
+ 109   1              writebyte(0xa0);
+ 110   1              respons();
+ 111   1              writebyte(address);
+ 112   1              respons();
+ 113   1              start();
+ 114   1              writebyte(0xa1);
+ 115   1              respons();
+ 116   1              dd=readbyte();
+ 117   1              stop();
+C51 COMPILER V9.01   I2C                                                                   09/25/2013 12:07:04 PAGE 3   
+
+ 118   1              return dd;
+ 119   1      }
+ 120          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    194    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,1553 @@
+C51 COMPILER V9.01   MAIN                                                                  09/25/2013 12:07:03 PAGE 1   
+
+
+C51 COMPILER V9.01, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN main.OBJ
+COMPILER INVOKED BY: D:\Keil\C51\BIN\C51.EXE main.c LARGE BROWSE DEBUG OBJECTEXTEND
+
+line level    source
+
+   1          #include <reg52.h>
+   2          #include <intrins.h>
+   3          #include <math.h>    
+   4          #include <stdio.h>   
+   5          #include <lcd\lcd.h>
+   6          #include <font\font.h>
+   7          #include <I2C\I2C.h>
+   8          #include <DELAY\DELAY.h>
+   9          
+  10          #define uchar unsigned char
+  11          #define uint unsigned int 
+  12          
+  13          typedef unsigned char  BYTE;
+  14          typedef unsigned short WORD;
+  15          
+  16          //DS1302相关地址定义
+  17          #define Ds1302_sec_addr                 0x80    //0x81          //秒数据地址    bit1=1时，低功耗，时钟振荡器停止工作；bit1=0时，正常工
+             -作。
+  18          #define Ds1302_min_addr                 0x82    //0x83          //分数据地址
+  19          #define Ds1302_hr_addr                  0x84    //0x85          //时数据地址    bit7=1时，12小时模式；bit7=0时，24小时模式；
+  20          #define Ds1302_date_addr                0x86    //0x87          //日数据地址
+  21          #define Ds1302_month_addr               0x88    //0x89          //月数据地址
+  22          #define Ds1302_day_addr                 0x8a    //0x8b          //星期数据地址
+  23          #define Ds1302_year_addr                0x8c    //0x8d          //年数据地址
+  24          #define Ds1302_control_addr             0x8e    //0x8f          //控制数据地址          0x80时无法写入DS1302；0x00时可写入；(bit7=1/0,其
+             -他全为0；)
+  25          #define Ds1302_charger_addr             0x90    //0x91          //涓流充电模式   
+  26          #define Ds1302_clkburst_addr    0xbe    //0xbf          //时钟突发模式寄存器
+  27          #define Ds1302_ramburst_addr    0xfe    //0xff          //RAM突发模式寄存器
+  28          
+  29          //ADXL345相关地址定义
+  30          #define SlaveAddress   0xA6   //定义器件在IIC总线中的从地址,根据ALT  ADDRESS地址引脚不同修改    \
+  31           //ALT  ADDRESS引脚接地时地址为0xA6，接电源时地址为0x3A
+  32                                
+  33          
+  34          sbit Ds1302_SCK = P2^5; //时钟  
+  35          sbit Ds1302_SDA = P2^6; //数据  
+  36          sbit Ds1302_RST = P2^7; //DS1302复位
+  37          
+  38          /*
+  39          //开发板DS1302管脚定义
+  40          sbit Ds1302_SCK = P3^6; //时钟  
+  41          sbit Ds1302_SDA = P3^4; //数据  
+  42          sbit Ds1302_RST = P3^5; //DS1302复位
+  43          */
+  44          //ADXL345加速度芯片管脚定义
+  45          sbit   SCL=P1^1;      //IIC时钟引脚定义
+  46          sbit   SDA=P1^0;      //IIC数据引脚定义
+  47          
+  48          sbit BEEP = P3^5;       
+  49            
+  50          //sbit CHECK = P0^0;
+  51          //sbit CHECK_while1_howlong = P0^1;
+  52          //sbit CHECK_ring_shake = P0^2;
+  53          
+C51 COMPILER V9.01   MAIN                                                                  09/25/2013 12:07:03 PAGE 2   
+
+  54          
+  55          //定义标志
+  56          bit ReadRTC_Flag;                                                                       //读DS1302标志
+  57          bit reset;                                                                                      //显示初始化标志
+  58          bit setmod;                                                                                     //设置模式      0的时候正常显示，1的时候进入设置模式
+  59          bit clear;
+  60          bit ring;                                                                                       //切换闹铃模式状态标志
+  61          
+  62          
+  63          //DS1302相关数组定义
+  64          static unsigned char Ds1302_time_BCD[8];//={40,56,11,22,9,4,13,0};                              //秒分时日月周年13-08-19 09:33:00                
+             -BCD码
+  65          static unsigned char Ds1302_time[8];                                                                            //秒分时日月周年  ds1302内部
+  66          static unsigned char Ds1302_display_time[8];                                                            //时间显示缓冲数组
+  67          //ADXL345相关数组定义
+  68          static unsigned char BUF[8];                                                                    //接收数据缓存区 
+  69          static int  dis_data;                                                                                   //变量 
+  70          static int x_value,y_value,z_value;
+  71          static uchar w_static_status,n_static_status,e_static_status,s_static_status;
+  72          
+  73          //EEPROM相关数组定义
+  74          static unsigned char e2prom_add;
+  75          
+  76          //闹铃数组定义
+  77          static unsigned char Ds1302_Bell_time_BCD[3]={0,1,12};                                          //闹铃时间：分-时                                                BCD码
+  78          static unsigned char Ds1302_Bell_time[3];                                                                       //闹铃时间,16进制
+  79          static unsigned char Ds1302_Bell_display_time[2];                                                       //闹铃时间显示缓冲数组
+  80          static unsigned char Ds1302_time_tmp;
+  81          //摇一摇相关定义
+  82          static unsigned int  shake_num_value,shake_num,shake_display_num;                       //摇摇次数以及其显示缓冲
+  83          static unsigned char ring_time_BCD,ring_time_tmp,ring_display_time;                     //响铃时间以及其显示缓冲
+  84          static unsigned char ring_stop_time[2],ring_stop_time_BCD[2];
+  85          
+  86          static unsigned char Static_status_num=10;
+  87          static unsigned char shake_flag=0;
+  88          static unsigned char xx_now,xx_before,yy_now,yy_before;
+  89          
+  90          //标志位相关
+  91          static char k,k_before;
+  92          static unsigned char modnum,modnum_cmp;
+  93          
+  94          
+  95          /******************************************************************/
+  96          /*                    函数声明                                    */
+  97          /******************************************************************/
+  98          //DS1302函数声明
+  99          void Ds1302_Write_Byte(unsigned char temp);
+ 100          void Ds1302_Write( unsigned char address,unsigned char dat );
+ 101          unsigned char Ds1302_Read ( unsigned char address );
+ 102          void Ds1302_Read_RTC(void);
+ 103          void Ds1302_Set_RTC(void);
+ 104          //ADXL345函数声明
+ 105          void delay(unsigned int k);
+ 106          void Init_ADXL345(void);             //初始化ADXL345
+ 107          void WriteDataLCM(uchar dataW);
+ 108          void WriteCommandLCM(uchar CMD,uchar Attribc);
+ 109          //void DisplayOneChar(uchar X,uchar Y,uchar DData);
+ 110          void conversion(uint temp_data);
+ 111          void  Single_Write_ADXL345(uchar REG_Address,uchar REG_data);   //单个写入数据
+ 112          uchar Single_Read_ADXL345(uchar REG_Address);                   //单个读取内部寄存器数据
+ 113          void  Multiple_Read_ADXL345();                                  //连续的读取内部寄存器数据
+ 114           
+C51 COMPILER V9.01   MAIN                                                                  09/25/2013 12:07:03 PAGE 3   
+
+ 115          void Delay5us(void);
+ 116          void Delay5ms(void);
+ 117          void ADXL345_Start(void);
+ 118          void ADXL345_Stop(void);
+ 119          void ADXL345_SendACK(bit ack);
+ 120          bit  ADXL345_RecvACK(void);
+ 121          void ADXL345_SendByte(BYTE dat);
+ 122          BYTE ADXL345_RecvByte(void);
+ 123          void ADXL345_ReadPage(void);
+ 124          void ADXL345_WritePage(void);
+ 125          
+ 126          void ADXL345_AXYZ(void);
+ 127          
+ 128          //判断函数声明
+ 129          void set_parameter(void);
+ 130          void judge_mode(void);
+ 131          void judge_degree(void);
+ 132          void judge_shake(void);
+ 133          void judge_hlir(void);
+ 134          
+ 135          //彩屏显示函数声明
+ 136          void display(void);
+ 137          void w_mod0(void);
+ 138          void n_mod1(void);
+ 139          void e_mod2(void);
+ 140          void s_mod3(void);
+ 141          void position(void);
+ 142          void clear_position(void);
+ 143          
+ 144          
+ 145          //设置函数声明
+ 146          void set_time(unsigned char shake_flag);
+ 147          void set_ring(unsigned char shake_flag);
+ 148          void set_date(unsigned char shake_flag);
+ 149          void set_shake(unsigned char shake_flag);
+ 150          
+ 151          //数据转换函数声明
+ 152          void bell_changeinBCD(void);
+ 153          void ring_changeinBCD(void);
+ 154          
+ 155          //初始化函数声明
+ 156          void Int0_Init(void);
+ 157          void main_Init(void);
+ 158          void E2P_readdata(void);
+ 159          void Data_Init(void);
+ 160          
+ 161          /******************************************************************/
+ 162          /*                    中断函数                                    */
+ 163          /******************************************************************/
+ 164          void INT0_SVC(void) interrupt 0                           
+ 165          {
+ 166   1              setmod=~setmod;
+ 167   1              if(!setmod) {clear=1;}
+ 168   1              if(setmod) {k=0;k_before=8;clear=0;}    
+ 169   1              delay_10ms(3);
+ 170   1      }
+ 171          
+ 172          void main()
+ 173          {       
+ 174   1      //初始化参数   
+ 175   1              main_Init();                            
+ 176   1              EEPROM_Init();                                  //初始化EEPROM
+C51 COMPILER V9.01   MAIN                                                                  09/25/2013 12:07:03 PAGE 4   
+
+ 177   1              Init_ADXL345();                 //初始化ADXL345
+ 178   1              Int0_Init();                                    //初始化INT0中断
+ 179   1              E2P_readdata();
+ 180   1              Data_Init();            
+ 181   1              Lcd_Init();                                     //tft初始化
+ 182   1      //循环！！！
+ 183   1              while(1)
+ 184   1              {       
+ 185   2                      //CHECK_while1_howlong=~CHECK_while1_howlong;
+ 186   2                      ADXL345_AXYZ(); 
+ 187   2                      while(ReadRTC_Flag)
+ 188   2                      {
+ 189   3                          ReadRTC_Flag=0;
+ 190   3                              if(setmod==0) 
+ 191   3                              {
+ 192   4                                      if(ring==0) judge_mode();       
+ 193   4                                      Ds1302_Read_RTC();
+ 194   4                              }
+ 195   3                              if((ring==0)&&(Ds1302_time[0]==Ds1302_Bell_time[0])&&(Ds1302_time[1]==Ds1302_Bell_time[1])&&(Ds1302_tim
+             -e[2]==Ds1302_Bell_time[2]))
+ 196   3                              {
+ 197   4                                      ring=1;         
+ 198   4                                      BEEP=0;
+ 199   4                                      modnum=3;
+ 200   4                                      reset=0;
+ 201   4                                      EA = 0;
+ 202   4                              }
+ 203   3                              if(ring==1)
+ 204   3                              {       
+ 205   4                                      judge_shake();
+ 206   4                                      judge_hlir();                   
+ 207   4                                      if((shake_num==0)||((Ds1302_time[1]==ring_stop_time[0])&&(Ds1302_time[2]==ring_stop_time[1])))
+ 208   4                                      {
+ 209   5                                              ring=0;
+ 210   5                                              BEEP=1;
+ 211   5                                              shake_num=shake_num_value;                                                                              
+ 212   5                                              EA = 1;
+ 213   5                                      }
+ 214   4                              }
+ 215   3                              if(clear) {clear_position();clear=0;}                                   
+ 216   3                              if(setmod) 
+ 217   3                              {
+ 218   4                                      set_parameter();
+ 219   4                                      position();
+ 220   4                                      if(shake_flag!=0) shake_flag=0;
+ 221   4                                      delay_10ms(1);
+ 222   4                              }       
+ 223   3                              display();
+ 224   3                      } 
+ 225   2                      ReadRTC_Flag=1; 
+ 226   2          }
+ 227   1      
+ 228   1      }
+ 229          
+ 230          //初始化函数**********************************************************************************************
+             -************
+ 231          //函数初始化
+ 232          void main_Init(void)
+ 233          {
+ 234   1              //屏幕参数初始化
+ 235   1              LCD_Clear(BLACK);                       //清屏
+ 236   1              BACK_COLOR=BLACK;                       //背景色：黑
+C51 COMPILER V9.01   MAIN                                                                  09/25/2013 12:07:03 PAGE 5   
+
+ 237   1              POINT_COLOR=WHITE;                      //点颜色: 白
+ 238   1              //模式以及相关参数初始化
+ 239   1              w_static_status=0;
+ 240   1              n_static_status=0;
+ 241   1              e_static_status=0;
+ 242   1              s_static_status=0;
+ 243   1              modnum=0;
+ 244   1              modnum_cmp=modnum;
+ 245   1              clear=0;
+ 246   1              BEEP=1;
+ 247   1              setmod=0;
+ 248   1              reset=0;
+ 249   1              ring=0; 
+ 250   1              delay_10ms(3);
+ 251   1      }
+ 252          void Data_Init(void)
+ 253          {
+ 254   1              unsigned char i;
+ 255   1              Ds1302_Set_RTC();
+ 256   1              //摇一摇闹铃初始数值设定(可用改为读取EEPROM数据)
+ 257   1              shake_num=shake_num_value;
+ 258   1              shake_display_num=shake_num_value;
+ 259   1              ring_time_tmp=ring_time_BCD;
+ 260   1              ring_display_time=ring_time_BCD;
+ 261   1              Ds1302_Bell_time_BCD[0]=0;
+ 262   1              bell_changeinBCD();
+ 263   1              ring_changeinBCD();
+ 264   1              
+ 265   1              //时间日期初始化
+ 266   1              for(i=0;i<8;i++)
+ 267   1              Ds1302_display_time[i]=Ds1302_time[i];
+ 268   1              delay_10ms(30);
+ 269   1      }
+ 270          //中断初始化
+ 271          void Int0_Init(void)
+ 272          {
+ 273   1              EA = 0;
+ 274   1          IT0 = 1; //负边沿触发中断
+ 275   1          EX0 = 1; //允许外部中断
+ 276   1          EA = 1;
+ 277   1              delay_10ms(3);
+ 278   1      }
+ 279          //初始化函数**********************************************************************************************
+             -************
+ 280          
+ 281          //设置函数************************************************************************************************
+             -************
+ 282          void set_parameter(void)
+ 283          {
+ 284   1              judge_degree();
+ 285   1              delay_1ms(1);
+ 286   1              if(shake_flag!=0)
+ 287   1                      {
+ 288   2                      if(modnum==0) 
+ 289   2                      {
+ 290   3                              set_time(shake_flag);
+ 291   3                              Ds1302_Set_RTC();
+ 292   3                              Ds1302_Read_RTC();
+ 293   3                      }
+ 294   2                      if(modnum==1) 
+ 295   2                      {
+ 296   3                              set_ring(shake_flag);
+C51 COMPILER V9.01   MAIN                                                                  09/25/2013 12:07:03 PAGE 6   
+
+ 297   3                              bell_changeinBCD();
+ 298   3                              ring_changeinBCD();
+ 299   3                      }
+ 300   2                      if(modnum==2) 
+ 301   2                      {
+ 302   3                              set_date(shake_flag);
+ 303   3                              Ds1302_Set_RTC();
+ 304   3                              Ds1302_Read_RTC();
+ 305   3                      }
+ 306   2                      if(modnum==3) 
+ 307   2                      {
+ 308   3                              set_shake(shake_flag);
+ 309   3                              //包括set_shake_num(num); set_ring_time(num);
+ 310   3                              shake_num=shake_num_value;
+ 311   3                              ring_changeinBCD();
+ 312   3                      }
+ 313   2              }
+ 314   1              delay_1ms(1);
+ 315   1      }
+ 316          void set_time(unsigned char shake_flag)
+ 317          {
+ 318   1              switch(shake_flag)
+ 319   1          {
+ 320   2      /*上移*/case 1:
+ 321   2                              {
+ 322   3                                      //k=0   时[2]
+ 323   3                                      if(k==0)
+ 324   3                                      {       
+ 325   4                                              Ds1302_time_BCD[2]+=10;                         
+ 326   4                                              if((Ds1302_time_BCD[2]>23)&&(Ds1302_time_BCD[2]<30))    Ds1302_time_BCD[2]=23;
+ 327   4                                              if(Ds1302_time_BCD[2]>=30)      Ds1302_time_BCD[2]=(Ds1302_time_BCD[2]%10);
+ 328   4                                      }
+ 329   3                                      //k=1   时[2]
+ 330   3                                      if(k==1)
+ 331   3                                      {
+ 332   4                                              Ds1302_time_BCD[2]++;
+ 333   4                                              if(Ds1302_time_BCD[2]>23)       Ds1302_time_BCD[2]=0;
+ 334   4                                      }                                                                                                                                
+ 335   3                                      //k=2   分[1]   
+ 336   3                                      if(k==2)        Ds1302_time_BCD[1]+=10;
+ 337   3                                      //k=3   分[1]                           
+ 338   3                                      if(k==3)        Ds1302_time_BCD[1]++;                                   
+ 339   3                                      if(Ds1302_time_BCD[1]>=60)      Ds1302_time_BCD[1]=(Ds1302_time_BCD[1]%10);
+ 340   3                                      //k=4   秒[0]
+ 341   3                                      if(k==4)        Ds1302_time_BCD[0]+=10;
+ 342   3                                      //k=5   秒[0]
+ 343   3                                      if(k==5)        Ds1302_time_BCD[0]++;
+ 344   3                                      if(Ds1302_time_BCD[0]>=60)      Ds1302_time_BCD[0]=(Ds1302_time_BCD[0]%10);
+ 345   3                                      break;
+ 346   3                              }
+ 347   2      /*下移*/case 2: 
+ 348   2                              {
+ 349   3                                      //k=0   时[2]
+ 350   3                                      if(k==0)
+ 351   3                                      {                                                                       
+ 352   4                                              if(Ds1302_time_BCD[2]<10)
+ 353   4                                              {       
+ 354   5                                                      if(Ds1302_time_BCD[2]>=4)       Ds1302_time_BCD[2]=23;
+ 355   5                                                      if(Ds1302_time_BCD[2]<4)        Ds1302_time_BCD[2]+=20;
+ 356   5                                              }
+ 357   4                                              else    if(Ds1302_time_BCD[2]>=10)      Ds1302_time_BCD[2]-=10;                 
+ 358   4                                      }
+C51 COMPILER V9.01   MAIN                                                                  09/25/2013 12:07:03 PAGE 7   
+
+ 359   3                                      //k=1   时[2]                           
+ 360   3                                      if(k==1)
+ 361   3                                      {
+ 362   4                                              if(Ds1302_time_BCD[2]==0)       Ds1302_time_BCD[2]=23;
+ 363   4                                              else    if(Ds1302_time_BCD[2]>0)        Ds1302_time_BCD[2]--;                                    
+ 364   4                                      }
+ 365   3                                      //k=2   分[1]
+ 366   3                                      if(k==2)
+ 367   3                                      {
+ 368   4                                              if(Ds1302_time_BCD[1]>=10)      Ds1302_time_BCD[1]-=10;
+ 369   4                                              else    if(Ds1302_time_BCD[1]<10)       Ds1302_time_BCD[1]+=50; 
+ 370   4                                      }
+ 371   3                                      //k=3   分[1]
+ 372   3                                      if(k==3)
+ 373   3                                      {
+ 374   4                                              if(Ds1302_time_BCD[1]==0)       Ds1302_time_BCD[1]=59;
+ 375   4                                              else    if(Ds1302_time_BCD[1]>0)        Ds1302_time_BCD[1]--; 
+ 376   4                                      }
+ 377   3                                      //k=4   秒[0]
+ 378   3                                      if(k==4)
+ 379   3                                      {
+ 380   4                                              if(Ds1302_time_BCD[0]>=10)      Ds1302_time_BCD[0]-=10;
+ 381   4                                              else    if(Ds1302_time_BCD[0]<10)       Ds1302_time_BCD[0]+=50; 
+ 382   4                                      }
+ 383   3                                      //k=5   秒[0]
+ 384   3                                      if(k==5)
+ 385   3                                      {       
+ 386   4                                              if(Ds1302_time_BCD[0]==0)       Ds1302_time_BCD[0]=59;
+ 387   4                                              else    if(Ds1302_time_BCD[0]>0)        Ds1302_time_BCD[0]--;
+ 388   4                                      }
+ 389   3                                      break;
+ 390   3                              }
+ 391   2      /*左移*/case 3:{k_before=k;k--;if(k<0) k=5;break;}
+ 392   2      /*右移*/case 4:{k_before=k;k++;if(k>5) k=0;break;}
+ 393   2                      default:break;
+ 394   2              }
+ 395   1              write_add((0),Ds1302_time_BCD[0]);
+ 396   1              delay_1ms(5);
+ 397   1              write_add((1),Ds1302_time_BCD[1]);
+ 398   1              delay_1ms(5);
+ 399   1              write_add((2),Ds1302_time_BCD[2]);
+ 400   1              delay_1ms(5);   
+ 401   1      }
+ 402          
+ 403          void set_date(unsigned char shake_flag)
+ 404          {
+ 405   1              switch(shake_flag)
+ 406   1          {
+ 407   2      /*上移*/case 1:
+ 408   2                              {
+ 409   3                                      //k=0   年[6]
+ 410   3                                      if(k==0)        Ds1302_time_BCD[6]+=10;
+ 411   3                                      //k=1   年[6]
+ 412   3                                      if(k==1)        Ds1302_time_BCD[6]++;
+ 413   3                                      //k=2   月[4]
+ 414   3                                      if(k==2)        Ds1302_time_BCD[4]+=10;                                                         
+ 415   3                                      if((k==2)&&(Ds1302_time_BCD[4]>12)&&(Ds1302_time_BCD[4]<=20))   Ds1302_time_BCD[4]=12;
+ 416   3                                      if((k==2)&&(Ds1302_time_BCD[4]>20))     Ds1302_time_BCD[4]=(Ds1302_time_BCD[4]%10);
+ 417   3                                      //k=3   月[4]
+ 418   3                                      if(k==3)        Ds1302_time_BCD[4]++;
+ 419   3                                      if((k==3)&&(Ds1302_time_BCD[4]>12))     Ds1302_time_BCD[4]=1;
+ 420   3                                      //k=4   日[3]
+C51 COMPILER V9.01   MAIN                                                                  09/25/2013 12:07:03 PAGE 8   
+
+ 421   3                                      if(k==4)        Ds1302_time_BCD[3]+=10;                                                 
+ 422   3                                      if((k==4)&&(Ds1302_time_BCD[3]<40)&&(Ds1302_time_BCD[3]>31))    Ds1302_time_BCD[3]=31;
+ 423   3                                      if((k==4)&&(Ds1302_time_BCD[3]>=40))    Ds1302_time_BCD[3]=(Ds1302_time_BCD[3]%10);
+ 424   3                                      //k=5   日[3]
+ 425   3                                      if(k==5)        Ds1302_time_BCD[3]++;
+ 426   3                                      if((k==5)&&(Ds1302_time_BCD[3]>31))     Ds1302_time_BCD[3]=1;
+ 427   3                                      break;
+ 428   3                              } 
+ 429   2      /*下移*/case 2:
+ 430   2                              {
+ 431   3                                      if(k==0)
+ 432   3                                      {
+ 433   4                                              if(Ds1302_time_BCD[6]<10)       Ds1302_time_BCD[6]+=30;
+ 434   4                                              else    if(Ds1302_time_BCD[6]>=10)      Ds1302_time_BCD[6]-=10; 
+ 435   4                                      }  
+ 436   3                                      //k=0   年[6]                           
+ 437   3                                      if(k==1)
+ 438   3                                      {
+ 439   4                                              if(Ds1302_time_BCD[6]==0)       Ds1302_time_BCD[6]=30;  
+ 440   4                                              else    if(Ds1302_time_BCD[6]>0)        Ds1302_time_BCD[6]--;
+ 441   4                                      }
+ 442   3                                      //k=2   月[4] 
+ 443   3                                      if(k==2)
+ 444   3                                      {
+ 445   4                                              if(Ds1302_time_BCD[4]<10)
+ 446   4                                              {
+ 447   5                                                      if(Ds1302_time_BCD[4]>2)        Ds1302_time_BCD[4]=12;
+ 448   5                                                      if(Ds1302_time_BCD[4]<=2)       Ds1302_time_BCD[4]+=10;
+ 449   5                                              }
+ 450   4                                              else    
+ 451   4                                              {
+ 452   5                                                      if(Ds1302_time_BCD[4]==10)      Ds1302_time_BCD[4]=1;
+ 453   5                                                      if(Ds1302_time_BCD[4]>10)       Ds1302_time_BCD[4]-=10;
+ 454   5                                              }
+ 455   4                                      }
+ 456   3                                      //k=3   月[4]
+ 457   3                                      if(k==3)
+ 458   3                                      {
+ 459   4                                              if(Ds1302_time_BCD[4]==1)       Ds1302_time_BCD[4]=12;
+ 460   4                                              else    if(Ds1302_time_BCD[4]>1)        Ds1302_time_BCD[4]--;
+ 461   4                                      }
+ 462   3                                      //k=4   日[3]
+ 463   3                                      if(k==4)
+ 464   3                                      {
+ 465   4                                              if(Ds1302_time_BCD[3]<10)
+ 466   4                                              {
+ 467   5                                                      if(Ds1302_time_BCD[3]>1)        Ds1302_time_BCD[3]=31;
+ 468   5                                                      if(Ds1302_time_BCD[3]<=1)       Ds1302_time_BCD[3]+=30;
+ 469   5                                              }
+ 470   4                                              else    
+ 471   4                                              {
+ 472   5                                                      if(Ds1302_time_BCD[3]==10) Ds1302_time_BCD[3]=1;
+ 473   5                                                      if(Ds1302_time_BCD[3]>10) Ds1302_time_BCD[3]-=10;                       
+ 474   5                                              }       
+ 475   4                                      }
+ 476   3                                      //k=5   日[3]
+ 477   3                                      if(k==5)
+ 478   3                                      {
+ 479   4                                              if(Ds1302_time_BCD[3]==1) Ds1302_time_BCD[3]=31;
+ 480   4                                              else    if(Ds1302_time_BCD[3]>1)        Ds1302_time_BCD[3]--;
+ 481   4                                      }
+ 482   3                                      break;
+C51 COMPILER V9.01   MAIN                                                                  09/25/2013 12:07:03 PAGE 9   
+
+ 483   3                              }
+ 484   2      /*左移*/case 3:{k_before=k;k--;if(k<0) k=5;break;}
+ 485   2      /*右移*/case 4:{k_before=k;k++;if(k>5) k=0;break;}
+ 486   2                      default:break;          
+ 487   2              }
+ 488   1              write_add((3),Ds1302_time_BCD[3]);
+ 489   1              delay_1ms(5);
+ 490   1              write_add((4),Ds1302_time_BCD[4]);
+ 491   1              delay_1ms(5);
+ 492   1              write_add((6),Ds1302_time_BCD[6]);
+ 493   1              delay_1ms(5);
+ 494   1      
+ 495   1      }
+ 496          void set_ring(unsigned char shake_flag)
+ 497          {
+ 498   1              //设置闹钟时间
+ 499   1              switch(shake_flag)
+ 500   1              {
+ 501   2      
+ 502   2      /*上移*/case 1:
+ 503   2                              {
+ 504   3                                      //k=0   时[2]
+ 505   3                                      if(k==0)
+ 506   3                                      {       
+ 507   4                                              Ds1302_Bell_time_BCD[2]+=10;                            
+ 508   4                                              if((Ds1302_Bell_time_BCD[2]>23)&&(Ds1302_Bell_time_BCD[2]<30))  Ds1302_Bell_time_BCD[2]=23;
+ 509   4                                              if(Ds1302_Bell_time_BCD[2]>=30) Ds1302_Bell_time_BCD[2]=(Ds1302_Bell_time_BCD[2]%10);
+ 510   4                                      }
+ 511   3                                      //k=1   时[2]
+ 512   3                                      if(k==1)
+ 513   3                                      {
+ 514   4                                              Ds1302_Bell_time_BCD[2]++;
+ 515   4                                              if(Ds1302_Bell_time_BCD[2]>23)  Ds1302_Bell_time_BCD[2]=0;
+ 516   4                                      }                                                                                                                                
+ 517   3                                      //k=2   分[1]
+ 518   3                                      if(k==2)        Ds1302_Bell_time_BCD[1]+=10;
+ 519   3                                      //k=3   分[1]                           
+ 520   3                                      if(k==3)        Ds1302_Bell_time_BCD[1]++;                                      
+ 521   3                                      if(Ds1302_Bell_time_BCD[1]>=60) Ds1302_Bell_time_BCD[1]=(Ds1302_Bell_time_BCD[1]%10);   
+ 522   3                                      break;
+ 523   3                              }
+ 524   2      /*下移*/case 2:
+ 525   2                              {
+ 526   3                                      //k=0   时[2]
+ 527   3                                      if(k==0)
+ 528   3                                      {                                                                       
+ 529   4                                              if(Ds1302_Bell_time_BCD[2]<10)
+ 530   4                                              {
+ 531   5                                                      if(Ds1302_Bell_time_BCD[2]>=4)  Ds1302_Bell_time_BCD[2]=23;
+ 532   5                                                      if(Ds1302_Bell_time_BCD[2]<4)   Ds1302_Bell_time_BCD[2]+=20;
+ 533   5                                              }
+ 534   4                                              else    if(Ds1302_Bell_time_BCD[2]>=10) Ds1302_Bell_time_BCD[2]-=10;                    
+ 535   4                                      }
+ 536   3                                      //k=1   时[2]                           
+ 537   3                                      if(k==1)
+ 538   3                                      {
+ 539   4                                              if(Ds1302_Bell_time_BCD[2]==0)  Ds1302_Bell_time_BCD[2]=23;
+ 540   4                                              else    if(Ds1302_Bell_time_BCD[2]>0)   Ds1302_Bell_time_BCD[2]--;                                       
+ 541   4                                      }
+ 542   3                                      //k=2   分[1]
+ 543   3                                      if(k==2)
+ 544   3                                      {
+C51 COMPILER V9.01   MAIN                                                                  09/25/2013 12:07:03 PAGE 10  
+
+ 545   4                                              if(Ds1302_Bell_time_BCD[1]>=10) Ds1302_Bell_time_BCD[1]-=10;
+ 546   4                                              else    if(Ds1302_Bell_time_BCD[1]<10)  Ds1302_Bell_time_BCD[1]+=50; 
+ 547   4                                      }
+ 548   3                                      //k=3   分[1]
+ 549   3                                      if(k==3)
+ 550   3                                      {
+ 551   4                                              if(Ds1302_Bell_time_BCD[1]==0)  Ds1302_Bell_time_BCD[1]=59;
+ 552   4                                              else    if(Ds1302_Bell_time_BCD[1]>0)   Ds1302_Bell_time_BCD[1]--; 
+ 553   4                                      }
+ 554   3                                      break;
+ 555   3                              }
+ 556   2      /*左移*/case 3:{k_before=k;k--;if(k<0) k=3;break;}
+ 557   2      /*右移*/case 4:{k_before=k;k++;if(k>3) k=0;break;}
+ 558   2                      default:break;
+ 559   2              }
+ 560   1              delay_1ms(1);   
+ 561   1              write_add(7,Ds1302_Bell_time_BCD[1]);
+ 562   1              delay_1ms(5);
+ 563   1              write_add(8,Ds1302_Bell_time_BCD[2]);
+ 564   1              delay_1ms(5);
+ 565   1      }
+ 566          void set_shake(unsigned char shake_flag)
+ 567          {
+ 568   1              //设置闹钟时间
+ 569   1              switch(shake_flag)
+ 570   1              {
+ 571   2      
+ 572   2      /*上移*/case 1:
+ 573   2                              {
+ 574   3                                      if(k==0)        ring_time_BCD+=10;                              
+ 575   3                                      if(k==1)        ring_time_BCD++;
+ 576   3                                      if(ring_time_BCD==70)   ring_time_BCD=1;                        
+ 577   3                                      if(ring_time_BCD>60)    ring_time_BCD=(ring_time_BCD%10);
+ 578   3                                      if(k==2)        shake_num_value+=100;                           
+ 579   3                                      if(k==3)        shake_num_value+=10;
+ 580   3                                      if(k==4)        shake_num_value++;                              
+ 581   3                                      if(shake_num_value>999) shake_num_value=1;
+ 582   3                                      break;
+ 583   3                              }
+ 584   2      /*下移*/case 2:
+ 585   2                              {
+ 586   3                                      if(k==0)
+ 587   3                                      {
+ 588   4                                              if(ring_time_BCD==10)   ring_time_BCD=1;
+ 589   4                                              else
+ 590   4                                              {
+ 591   5                                                      if(ring_time_BCD>10)    ring_time_BCD-=10;
+ 592   5                                                      else    if(ring_time_BCD<10)    ring_time_BCD+=50; 
+ 593   5                                              }
+ 594   4                                      }
+ 595   3                                      if(k==1)
+ 596   3                                      {
+ 597   4                                              if(ring_time_BCD==1)    ring_time_BCD=60;
+ 598   4                                              else    if(ring_time_BCD>1)     ring_time_BCD--; 
+ 599   4                                      }
+ 600   3                                      if(k==2)
+ 601   3                                      {
+ 602   4                                              if(shake_num_value==100)        shake_num_value=1;
+ 603   4                                              else
+ 604   4                                              {
+ 605   5                                                      if(shake_num_value<100) shake_num_value+=900;
+ 606   5                                                      else if(shake_num_value>100)    shake_num_value-=100;
+C51 COMPILER V9.01   MAIN                                                                  09/25/2013 12:07:03 PAGE 11  
+
+ 607   5                                              }
+ 608   4                                      }                       
+ 609   3                                      if(k==3)
+ 610   3                                      {       
+ 611   4                                              if(shake_num_value==10) shake_num_value=1;
+ 612   4                                              else
+ 613   4                                              {
+ 614   5                                                      if(shake_num_value<10)  shake_num_value+=90;
+ 615   5                                                      else if(shake_num_value>10) shake_num_value-=10;
+ 616   5                                              }
+ 617   4                                      }
+ 618   3                                      if(k==4)
+ 619   3                                      {
+ 620   4                                              if(shake_num_value==1)  shake_num_value=999;
+ 621   4                                              else if(shake_num_value>1)      shake_num_value--;
+ 622   4                                      }
+ 623   3                                      break;
+ 624   3                              }
+ 625   2      /*左移*/case 3:{k_before=k;k--;if(k<0) k=4;break;}
+ 626   2      /*右移*/case 4:{k_before=k;k++;if(k>4) k=0;break;}
+ 627   2                      default:break;
+ 628   2              }       
+ 629   1              delay_1ms(1);
+ 630   1              write_add(9,shake_num_value);   
+ 631   1              delay_1ms(5);
+ 632   1              write_add(10,ring_time_BCD);
+ 633   1              ring_time_tmp=ring_time_BCD;
+ 634   1              delay_1ms(5);
+ 635   1      }
+ 636          
+ 637          //设置函数************************************************************************************************
+             -************
+ 638          
+ 639          //显示函数区**********************************************************************************************
+             -************
+ 640          //显示模式0：时:分:秒
+ 641          void w_mod0(void)
+ 642          {
+ 643   1              //汉字部分
+ 644   1              if(reset==0)
+ 645   1              {
+ 646   2                      showhanzi(80,40,0);
+ 647   2                      showhanzi(80,88,1);
+ 648   2              }
+ 649   1              //数字部分
+ 650   1              if((reset==0)||(Ds1302_time[2]!=Ds1302_display_time[2]))
+ 651   1              {
+ 652   2                      Ds1302_display_time[2]=Ds1302_time[2];
+ 653   2                      w_LCD_ShowNum( 32, 16, (Ds1302_display_time[2]/16));                                                                                    //         
+ 654   2                      w_LCD_ShowNum( 32, 32, (Ds1302_display_time[2]&0x0f));                                                                                  //
+ 655   2              }       
+ 656   1              if(reset==0) w_LCD_ShowNum( 32, 48, 10);
+ 657   1              if((reset==0)||(Ds1302_time[1]!=Ds1302_display_time[1]))
+ 658   1              {
+ 659   2                      Ds1302_display_time[1]=Ds1302_time[1];                                          
+ 660   2                      w_LCD_ShowNum( 32, 64, (Ds1302_display_time[1]/16));                                                                                    //
+ 661   2                      w_LCD_ShowNum( 32, 80, (Ds1302_display_time[1]&0x0f));                                                                                  //
+ 662   2              }
+ 663   1              if(reset==0) w_LCD_ShowNum( 32, 96, 10);
+ 664   1              if((reset==0)||(Ds1302_time[0]!=Ds1302_display_time[0]))
+ 665   1              {
+ 666   2                      Ds1302_display_time[0]=Ds1302_time[0];
+C51 COMPILER V9.01   MAIN                                                                  09/25/2013 12:07:03 PAGE 12  
+
+ 667   2                      w_LCD_ShowNum( 32, 112, (Ds1302_display_time[0]/16));                                                                                           //
+ 668   2                      w_LCD_ShowNum( 32, 128, (Ds1302_display_time[0]&0x0f));                                                                                         //
+ 669   2              }
+ 670   1              if(reset==0)
+ 671   1              {
+ 672   2                      showxuexiao(0,80,0);
+ 673   2                      showxuexiao(0,96,1);
+ 674   2                      showxuexiao(0,112,0);
+ 675   2                      showxuexiao(0,128,2);
+ 676   2                      showxuexiao(0,144,3);
+ 677   2              }
+ 678   1              if(reset==0)    reset=1;
+ 679   1              delay_1ms(1);
+ 680   1      }
+ 681          
+ 682          //显示模式1：显示闹铃时间: 时:分
+ 683          void n_mod1(void)                 
+ 684          {
+ 685   1              //汉字部分
+ 686   1              if(reset==0)
+ 687   1              {
+ 688   2                      showhanzi(72,112,4);
+ 689   2                      showhanzi(24,112,5);
+ 690   2              }
+ 691   1              //数字部分
+ 692   1              if((reset==0)||(Ds1302_Bell_time[2]!=Ds1302_Bell_display_time[1]))
+ 693   1              {
+ 694   2                      Ds1302_Bell_display_time[1]=Ds1302_Bell_time[2];
+ 695   2                      n_LCD_ShowNum( 88, 48, (Ds1302_Bell_display_time[1]/16));                                                                       //
+ 696   2                      n_LCD_ShowNum( 72, 48, (Ds1302_Bell_display_time[1]&0x0f));                                                                     //
+ 697   2              }
+ 698   1              if(reset==0) n_LCD_ShowNum( 56, 48, 10);
+ 699   1              if((reset==0)||(Ds1302_Bell_time[1]!=Ds1302_Bell_display_time[0]))
+ 700   1              {
+ 701   2                      Ds1302_Bell_display_time[0]=Ds1302_Bell_time[1];
+ 702   2                      n_LCD_ShowNum( 40, 48, (Ds1302_Bell_display_time[0]/16));                                                                       //
+ 703   2                      n_LCD_ShowNum( 24, 48, (Ds1302_Bell_display_time[0]&0x0f));                                                                     //
+ 704   2              }
+ 705   1              if(reset==0)
+ 706   1              {
+ 707   2                      showxuexiao(64,0,12);
+ 708   2                      showxuexiao(48,0,13);
+ 709   2                      showxuexiao(32,0,12);
+ 710   2                      showxuexiao(16,0,14);
+ 711   2                      showxuexiao(0,0,15);
+ 712   2              }
+ 713   1              if(reset==0) reset=1;
+ 714   1              delay_1ms(1);
+ 715   1      }
+ 716          //显示模式2：年-月-日
+ 717          void e_mod2(void)
+ 718          {
+ 719   1              //汉字部分
+ 720   1              if(reset==0)
+ 721   1              {
+ 722   2                      showhanzi(16,88,2);
+ 723   2                      showhanzi(16,40,3);
+ 724   2              }
+ 725   1              //数字部分
+ 726   1              if((reset==0)||(Ds1302_time[6]!=Ds1302_display_time[6]))
+ 727   1              {
+ 728   2                      Ds1302_display_time[6]=Ds1302_time[6];
+C51 COMPILER V9.01   MAIN                                                                  09/25/2013 12:07:03 PAGE 13  
+
+ 729   2                      e_LCD_ShowNum( 64, 128, (Ds1302_display_time[6]/16));                                                            //
+ 730   2                      e_LCD_ShowNum( 64, 112, (Ds1302_display_time[6]&0x0f));                                                          //
+ 731   2              }
+ 732   1              if(reset==0) e_LCD_ShowNum( 64, 96, 10);        
+ 733   1              if((reset==0)||(Ds1302_time[4]!=Ds1302_display_time[4]))
+ 734   1              {
+ 735   2                      Ds1302_display_time[4]=Ds1302_time[4];                                  
+ 736   2                      e_LCD_ShowNum( 64, 80, (Ds1302_display_time[4]/16));                                                             //
+ 737   2                      e_LCD_ShowNum( 64, 64, (Ds1302_display_time[4]&0x0f));                                                           //
+ 738   2              }
+ 739   1              if(reset==0) e_LCD_ShowNum( 64, 48, 10);
+ 740   1              if((reset==0)||(Ds1302_time[3]!=Ds1302_display_time[3]))
+ 741   1              {
+ 742   2                      Ds1302_display_time[3]=Ds1302_time[3];
+ 743   2                      e_LCD_ShowNum( 64, 32, (Ds1302_display_time[3]/16));                                                             //
+ 744   2                      e_LCD_ShowNum( 64, 16, (Ds1302_display_time[3]&0x0f));                                                           //
+ 745   2              }
+ 746   1              if(reset==0)
+ 747   1              {
+ 748   2                      showxuexiao(112,64,4);
+ 749   2                      showxuexiao(112,48,5);
+ 750   2                      showxuexiao(112,32,4);
+ 751   2                      showxuexiao(112,16,6);
+ 752   2                      showxuexiao(112,0,7);
+ 753   2              }
+ 754   1              if(reset==0)    reset=1;
+ 755   1              delay_1ms(1);           
+ 756   1      }
+ 757          
+ 758          //闹铃延时显示:闹铃延续时间以及摇一摇的次数
+ 759          void s_mod3(void)
+ 760          {
+ 761   1              //汉字部分
+ 762   1              if(reset==0)
+ 763   1              {
+ 764   2                      showhanzi(16,16,6);
+ 765   2                      showhanzi(48,16,7);
+ 766   2                      showhanzi(80,16,6);     
+ 767   2              }
+ 768   1              //数字部分
+ 769   1              if(ring==0)
+ 770   1              {
+ 771   2                      if((reset==0)||(ring_time_BCD!=ring_display_time))
+ 772   2                      {
+ 773   3                              ring_display_time=ring_time_BCD;
+ 774   3                              s_LCD_ShowNum( 24, 56, (ring_display_time/10) );                                                                        //
+ 775   3                              s_LCD_ShowNum( 40, 56, (ring_display_time%10) );                                                                        //
+ 776   3                      }
+ 777   2              }
+ 778   1              else if(ring==1)
+ 779   1              {
+ 780   2                      if((reset==0)||(ring_time_tmp!=ring_display_time))
+ 781   2                      {
+ 782   3                              ring_display_time=ring_time_tmp;
+ 783   3                              s_LCD_ShowNum( 24, 56, (ring_display_time/10) );                                                                        //
+ 784   3                              s_LCD_ShowNum( 40, 56, (ring_display_time%10) );                                                                        //
+ 785   3                      }
+ 786   2              }
+ 787   1              if(reset==0)
+ 788   1              {
+ 789   2                      s_LCD_ShowNum( 56, 56, 10 );
+ 790   2                      s_LCD_ShowNum( 72, 56, 11 );
+C51 COMPILER V9.01   MAIN                                                                  09/25/2013 12:07:03 PAGE 14  
+
+ 791   2                      s_LCD_ShowNum( 88, 56, 12 );    
+ 792   2              }
+ 793   1              if(ring==0)
+ 794   1              {
+ 795   2                      if((reset==0)||(shake_num_value!=shake_display_num))
+ 796   2                      {
+ 797   3                              shake_display_num=shake_num_value;
+ 798   3                              s_LCD_ShowNum( 24, 96, (shake_display_num/100));                                                                        //
+ 799   3                              s_LCD_ShowNum( 40, 96, ((shake_display_num/10)%10));                                                                    //
+ 800   3                              s_LCD_ShowNum( 56, 96, (shake_display_num%10));                                                                 //
+ 801   3                      }
+ 802   2              }
+ 803   1              else if(ring==1)
+ 804   1              {
+ 805   2                      if((reset==0)||(shake_num!=shake_display_num))
+ 806   2                      {
+ 807   3                              shake_display_num=shake_num;
+ 808   3                              s_LCD_ShowNum( 24, 96, (shake_display_num/100));                                                                        //
+ 809   3                              s_LCD_ShowNum( 40, 96, ((shake_display_num/10)%10));                                                                    //
+ 810   3                              s_LCD_ShowNum( 56, 96, (shake_display_num%10));
+ 811   3                      }
+ 812   2              }
+ 813   1              if(reset==0)
+ 814   1              {
+ 815   2                      showhanzi(72,96,8);
+ 816   2                      showxuexiao(48,144,8);
+ 817   2                      showxuexiao(64,144,9);
+ 818   2                      showxuexiao(80,144,8);
+ 819   2                      showxuexiao(96,144,10);
+ 820   2                      showxuexiao(112,144,11);
+ 821   2              }
+ 822   1              if(reset==0)    reset=1;
+ 823   1              delay_1ms(1);
+ 824   1      }
+ 825          void position(void)
+ 826          {
+ 827   1              if(modnum==0)
+ 828   1              {
+ 829   2                      switch(k)
+ 830   2                      {
+ 831   3                              case 0:yy_now=16;break;
+ 832   3                              case 1:yy_now=32;break;
+ 833   3                              case 2:yy_now=64;break;
+ 834   3                              case 3:yy_now=80;break;
+ 835   3                              case 4:yy_now=112;break;
+ 836   3                              case 5:yy_now=128;break;
+ 837   3                              default:break;
+ 838   3                      }
+ 839   2                      switch(k_before)
+ 840   2                      {
+ 841   3                              case 0:yy_before=16;break;
+ 842   3                              case 1:yy_before=32;break;
+ 843   3                              case 2:yy_before=64;break;
+ 844   3                              case 3:yy_before=80;break;
+ 845   3                              case 4:yy_before=112;break;
+ 846   3                              case 5:yy_before=128;break;
+ 847   3                              default:break;
+ 848   3                      }
+ 849   2                      we_position(28,yy_before,1);
+ 850   2                      we_position(28,yy_now,0);               
+ 851   2                      goto sure_position;
+ 852   2              }
+C51 COMPILER V9.01   MAIN                                                                  09/25/2013 12:07:03 PAGE 15  
+
+ 853   1              if(modnum==1)
+ 854   1              {
+ 855   2                      switch(k)
+ 856   2                      {
+ 857   3                              case 0:xx_now=88;break;
+ 858   3                              case 1:xx_now=72;break;
+ 859   3                              case 2:xx_now=40;break;
+ 860   3                              case 3:xx_now=24;break;
+ 861   3                              default:break;
+ 862   3                      }
+ 863   2                      switch(k_before)
+ 864   2                      {
+ 865   3                              case 0:xx_before=88;break;
+ 866   3                              case 1:xx_before=72;break;
+ 867   3                              case 2:xx_before=40;break;
+ 868   3                              case 3:xx_before=24;break;
+ 869   3                              default:break;
+ 870   3                      }
+ 871   2                      ns_position(xx_before,44,1);
+ 872   2                      ns_position(xx_now,44,0);
+ 873   2                      goto sure_position;
+ 874   2              }
+ 875   1              if(modnum==2)
+ 876   1              {
+ 877   2                      switch(k)
+ 878   2                      {
+ 879   3                              case 0:yy_now=128;break;
+ 880   3                              case 1:yy_now=112;break;
+ 881   3                              case 2:yy_now=80;break;
+ 882   3                              case 3:yy_now=64;break;
+ 883   3                              case 4:yy_now=32;break;
+ 884   3                              case 5:yy_now=16;break;
+ 885   3                              default:break;
+ 886   3                      }
+ 887   2                      switch(k_before)
+ 888   2                      {
+ 889   3                              case 0:yy_before=128;break;
+ 890   3                              case 1:yy_before=112;break;
+ 891   3                              case 2:yy_before=80;break;
+ 892   3                              case 3:yy_before=64;break;
+ 893   3                              case 4:yy_before=32;break;
+ 894   3                              case 5:yy_before=16;break;
+ 895   3                              default:break;
+ 896   3                      }
+ 897   2                      we_position(96,yy_before,1);
+ 898   2                      we_position(96,yy_now,0);
+ 899   2                      goto sure_position;
+ 900   2              }
+ 901   1              if(modnum==3)
+ 902   1              {
+ 903   2                      switch(k)
+ 904   2                      {
+ 905   3                              case 0:xx_now=24;yy_now=88;break;
+ 906   3                              case 1:xx_now=40;yy_now=88;break;
+ 907   3                              case 2:xx_now=24;yy_now=128;break;
+ 908   3                              case 3:xx_now=40;yy_now=128;break;
+ 909   3                              case 4:xx_now=56;yy_now=128;break;
+ 910   3                              default:break;
+ 911   3                      }
+ 912   2                      switch(k_before)
+ 913   2                      {
+ 914   3                              case 0:xx_before=24;yy_before=88;break;
+C51 COMPILER V9.01   MAIN                                                                  09/25/2013 12:07:03 PAGE 16  
+
+ 915   3                              case 1:xx_before=40;yy_before=88;break;
+ 916   3                              case 2:xx_before=24;yy_before=128;break;
+ 917   3                              case 3:xx_before=40;yy_before=128;break;
+ 918   3                              case 4:xx_before=56;yy_before=128;break;
+ 919   3                              default:break;
+ 920   3                      }
+ 921   2                      ns_position(xx_before,yy_before,1);
+ 922   2                      ns_position(xx_now,yy_now,0);
+ 923   2                      goto sure_position;
+ 924   2              }
+ 925   1      sure_position:delay_1ms(1);
+ 926   1      }
+ 927          
+ 928          void clear_position(void)
+ 929          {
+ 930   1              if(modnum==0) {we_clear(28,16,2);goto clear_over;}
+ 931   1              if(modnum==1) {ns_clear(24,44,4);goto clear_over;}
+ 932   1              if(modnum==2) {we_clear(96,16,2);goto clear_over;}
+ 933   1              if(modnum==3) {ns_clear(24,88,4);ns_clear(24,128,4);goto clear_over;}
+ 934   1      clear_over:delay_1ms(1);        
+ 935   1      }
+ 936          
+ 937          void display(void)
+ 938          {
+ 939   1              if(modnum!=modnum_cmp) 
+ 940   1              {
+ 941   2                      modnum_cmp=modnum;
+ 942   2                      reset=0;
+ 943   2              } 
+ 944   1              //显示部分
+ 945   1              if(reset==0)  LCD_Clear(BLACK);
+ 946   1              if(modnum==0) {w_mod0();goto show;}     
+ 947   1              if(modnum==1) {n_mod1();goto show;}
+ 948   1              if(modnum==2) {e_mod2();goto show;}
+ 949   1              if(modnum==3) {s_mod3();goto show;}
+ 950   1      show:delay_1ms(1);
+ 951   1      }
+ 952          
+ 953          //显示函数区**********************************************************************************************
+             -**************
+ 954          
+ 955          //数据转换函数********************************************************************************************
+             -**************
+ 956          //闹钟时间BCD转化
+ 957          void bell_changeinBCD(void)
+ 958          {
+ 959   1              unsigned char i,tmp;
+ 960   1              for(i=0;i<3;i++)                //BCD处理
+ 961   1              {       
+ 962   2                      tmp=Ds1302_Bell_time_BCD[i]/10;
+ 963   2                      Ds1302_Bell_time[i]=Ds1302_Bell_time_BCD[i]%10;
+ 964   2                      Ds1302_Bell_time[i]=Ds1302_Bell_time[i]+tmp*16;
+ 965   2              } 
+ 966   1              delay_1ms(1);
+ 967   1      }
+ 968          //闹钟停止时间BCD转化
+ 969          void ring_changeinBCD(void)                                                                     
+ 970          {
+ 971   1              unsigned char i,tmp;
+ 972   1              ring_stop_time_BCD[1]=Ds1302_Bell_time_BCD[2];
+ 973   1              ring_stop_time_BCD[0]=Ds1302_Bell_time_BCD[1]+ring_time_BCD;
+ 974   1              if(ring_stop_time_BCD[0]>59)    {ring_stop_time_BCD[0]-=60;ring_stop_time_BCD[1]++;}
+C51 COMPILER V9.01   MAIN                                                                  09/25/2013 12:07:03 PAGE 17  
+
+ 975   1              if(ring_stop_time_BCD[1]>23)    ring_stop_time_BCD[1]=0;
+ 976   1              delay_1ms(1);
+ 977   1              for(i=0;i<2;i++)                //BCD处理
+ 978   1              {       
+ 979   2                      tmp=ring_stop_time_BCD[i]/10;
+ 980   2                      ring_stop_time[i]=ring_stop_time_BCD[i]%10;                             
+ 981   2                      ring_stop_time[i]=ring_stop_time[i]+tmp*16;
+ 982   2              }
+ 983   1              delay_1ms(1);
+ 984   1      }
+ 985          //数据转换函数********************************************************************************************
+             -**************
+ 986          
+ 987          //Ds1302函数区********************************************************************************************
+             -**************
+ 988          //写一个字节
+ 989          void Ds1302_Write_Byte(unsigned char temp) 
+ 990          {
+ 991   1              unsigned char i;
+ 992   1              for (i=0;i<8;i++)       //循环8次 写入数据
+ 993   1              { 
+ 994   2                      _nop_();
+ 995   2                      Ds1302_SCK=0;
+ 996   2                      _nop_();
+ 997   2                      Ds1302_SDA=temp&0x01;     //每次传输低字节 
+ 998   2                      _nop_();
+ 999   2                      temp>>=1;               //右移一位
+1000   2                      _nop_();
+1001   2                      Ds1302_SCK=1;
+1002   2              }
+1003   1      }  
+1004          //写入DS1302
+1005          void Ds1302_Write( unsigned char address,unsigned char dat )
+1006          {
+1007   1              Ds1302_RST=0;
+1008   1              _nop_();
+1009   1              _nop_();
+1010   1              Ds1302_SCK=0;
+1011   1              _nop_();
+1012   1              _nop_();
+1013   1              Ds1302_RST=1;   
+1014   1              _nop_();                    //启动
+1015   1              _nop_();
+1016   1              Ds1302_Write_Byte(address);     //发送地址
+1017   1              _nop_();
+1018   1              _nop_();
+1019   1              Ds1302_Write_Byte(dat);         //发送数据
+1020   1              Ds1302_RST=0;                       //恢复
+1021   1      }
+1022          //读出DS1302数据
+1023          unsigned char Ds1302_Read ( unsigned char address )
+1024          {
+1025   1              unsigned char i,temp=0x00;
+1026   1              Ds1302_RST=0;
+1027   1              _nop_();
+1028   1              Ds1302_SCK=0;
+1029   1              _nop_();
+1030   1              Ds1302_RST=1;
+1031   1              _nop_();
+1032   1              _nop_();
+1033   1              Ds1302_Write_Byte(address);
+1034   1              for (i=0;i<8;i++)               //循环8次 读取数据
+C51 COMPILER V9.01   MAIN                                                                  09/25/2013 12:07:03 PAGE 18  
+
+1035   1              {       
+1036   2                      _nop_();        
+1037   2                      if(Ds1302_SDA)
+1038   2                      temp|=0x80;                     //每次传输低字节
+1039   2                      _nop_();
+1040   2                      Ds1302_SCK=0;
+1041   2                      _nop_();
+1042   2                      temp>>=1;                       //右移一位
+1043   2                      _nop_();
+1044   2                      Ds1302_SCK=1;
+1045   2              } 
+1046   1              _nop_();
+1047   1              Ds1302_RST=0;
+1048   1              _nop_();                        //以下为DS1302复位的稳定时间
+1049   1              _nop_();
+1050   1              Ds1302_RST=0;
+1051   1              _nop_();
+1052   1              _nop_();
+1053   1              Ds1302_SCK=0;
+1054   1              _nop_();
+1055   1              _nop_();
+1056   1              Ds1302_SCK=1;
+1057   1              _nop_();
+1058   1              _nop_();
+1059   1              Ds1302_SDA=0;
+1060   1              _nop_();
+1061   1              _nop_();
+1062   1              Ds1302_SDA=1;
+1063   1              _nop_();
+1064   1              _nop_();
+1065   1              return (temp);                  //返回
+1066   1      }
+1067          //read RTC 读时钟数据
+1068          void Ds1302_Read_RTC(void)
+1069          {
+1070   1              unsigned char i,tmp;
+1071   1              Ds1302_time[0]=Ds1302_Read(Ds1302_sec_addr|0x01);
+1072   1              Ds1302_time[1]=Ds1302_Read(Ds1302_min_addr|0x01);
+1073   1              Ds1302_time[2]=Ds1302_Read(Ds1302_hr_addr|0x01);
+1074   1              Ds1302_time[3]=Ds1302_Read(Ds1302_date_addr|0x01);
+1075   1              Ds1302_time[4]=Ds1302_Read(Ds1302_month_addr|0x01);
+1076   1              Ds1302_time[5]=Ds1302_Read(Ds1302_day_addr|0x01);
+1077   1              Ds1302_time[6]=Ds1302_Read(Ds1302_year_addr|0x01);
+1078   1              for(i=0;i<8;i++)
+1079   1                 {           //BCD处理
+1080   2                      tmp=Ds1302_time[i]/16;
+1081   2                      Ds1302_time_BCD[i]=Ds1302_time[i]%16;
+1082   2                      Ds1302_time_BCD[i]=Ds1302_time_BCD[i]+tmp*10;
+1083   2                 }
+1084   1      }
+1085          //set RTC       设定时钟数据 
+1086          void Ds1302_Set_RTC(void)
+1087          {
+1088   1              unsigned char i,tmp;                
+1089   1              for(i=0;i<8;i++)
+1090   1              {                  //BCD处理
+1091   2                      tmp=Ds1302_time_BCD[i]/10;
+1092   2                      Ds1302_time[i]=Ds1302_time_BCD[i]%10;
+1093   2                      Ds1302_time[i]=Ds1302_time[i]+tmp*16;
+1094   2              } 
+1095   1              Ds1302_Write(0x8E,0X00);        
+1096   1              Ds1302_Write(Ds1302_sec_addr,Ds1302_time[0]);
+C51 COMPILER V9.01   MAIN                                                                  09/25/2013 12:07:03 PAGE 19  
+
+1097   1              Ds1302_Write(Ds1302_min_addr,Ds1302_time[1]);
+1098   1              Ds1302_Write(Ds1302_hr_addr,Ds1302_time[2]);
+1099   1              Ds1302_Write(Ds1302_date_addr,Ds1302_time[3]);
+1100   1              Ds1302_Write(Ds1302_month_addr,Ds1302_time[4]);
+1101   1              Ds1302_Write(Ds1302_day_addr,Ds1302_time[5]);
+1102   1              Ds1302_Write(Ds1302_year_addr,Ds1302_time[6]);
+1103   1              Ds1302_Write(0x8E,0x80);
+1104   1      } 
+1105          //Ds1302函数区********************************************************************************************
+             -**************
+1106          
+1107          //ADXL345函数区*******************************************************************************************
+             -***************
+1108          /**************延时*****************/
+1109          void delay(unsigned int k) 
+1110          { 
+1111   1          unsigned int i,j; 
+1112   1          for(i=0;i<k;i++)
+1113   1          { 
+1114   2          for(j=0;j<121;j++) 
+1115   2          {;}
+1116   2              } 
+1117   1      }
+1118          /**************************************
+1119          延时5微秒(STC90C52RC@12M)
+1120          不同的工作环境,需要调整此函数，注意时钟过快时需要修改
+1121          当改用1T的MCU时,请调整此延时函数
+1122          **************************************/
+1123          void Delay5us()
+1124          {
+1125   1          _nop_();_nop_();_nop_();_nop_();
+1126   1          _nop_();_nop_();_nop_();_nop_();
+1127   1          _nop_();_nop_();_nop_();_nop_();
+1128   1      }
+1129          /**************************************
+1130          延时5毫秒(STC90C52RC@12M)
+1131          不同的工作环境,需要调整此函数
+1132          当改用1T的MCU时,请调整此延时函数
+1133          **************************************/
+1134          void Delay5ms()
+1135          {
+1136   1          WORD n = 560;
+1137   1          while (n--);
+1138   1      }
+1139          /**************************************
+1140          起始信号
+1141          **************************************/
+1142          void ADXL345_Start()
+1143          {
+1144   1          SDA = 1;                    //拉高数据线
+1145   1          SCL = 1;                    //拉高时钟线
+1146   1          Delay5us();                 //延时
+1147   1          SDA = 0;                    //产生下降沿
+1148   1          Delay5us();                 //延时
+1149   1          SCL = 0;                    //拉低时钟线
+1150   1      }
+1151          /**************************************
+1152          停止信号
+1153          **************************************/
+1154          void ADXL345_Stop()
+1155          {
+1156   1          SDA = 0;                    //拉低数据线
+C51 COMPILER V9.01   MAIN                                                                  09/25/2013 12:07:03 PAGE 20  
+
+1157   1          SCL = 1;                    //拉高时钟线
+1158   1          Delay5us();                 //延时
+1159   1          SDA = 1;                    //产生上升沿
+1160   1          Delay5us();                 //延时
+1161   1      }
+1162          /**************************************
+1163          发送应答信号
+1164          入口参数:ack (0:ACK 1:NAK)
+1165          **************************************/
+1166          void ADXL345_SendACK(bit ack)
+1167          {
+1168   1          SDA = ack;                  //写应答信号
+1169   1          SCL = 1;                    //拉高时钟线
+1170   1          Delay5us();                 //延时
+1171   1          SCL = 0;                    //拉低时钟线
+1172   1          Delay5us();                 //延时
+1173   1      }
+1174          /**************************************
+1175          接收应答信号
+1176          **************************************/
+1177          bit ADXL345_RecvACK()
+1178          {
+1179   1          SCL = 1;                    //拉高时钟线
+1180   1          Delay5us();                 //延时
+1181   1          CY = SDA;                   //读应答信号
+1182   1          SCL = 0;                    //拉低时钟线
+1183   1          Delay5us();                 //延时
+1184   1          return CY;
+1185   1      }
+1186          /**************************************
+1187          向IIC总线发送一个字节数据
+1188          **************************************/
+1189          void ADXL345_SendByte(BYTE dat)
+1190          {
+1191   1          BYTE i;
+1192   1          for (i=0; i<8; i++)         //8位计数器
+1193   1          {
+1194   2              dat <<= 1;              //移出数据的最高位
+1195   2              SDA = CY;               //送数据口
+1196   2              SCL = 1;                //拉高时钟线
+1197   2              Delay5us();             //延时
+1198   2              SCL = 0;                //拉低时钟线
+1199   2              Delay5us();             //延时
+1200   2          }
+1201   1          ADXL345_RecvACK();
+1202   1      }
+1203          /**************************************
+1204          从IIC总线接收一个字节数据
+1205          **************************************/
+1206          BYTE ADXL345_RecvByte()
+1207          {
+1208   1          BYTE i;
+1209   1          BYTE dat = 0;
+1210   1          SDA = 1;                    //使能内部上拉,准备读取数据,
+1211   1          for (i=0; i<8; i++)         //8位计数器
+1212   1          {
+1213   2              dat <<= 1;
+1214   2              SCL = 1;                //拉高时钟线
+1215   2              Delay5us();             //延时
+1216   2              dat |= SDA;             //读数据               
+1217   2              SCL = 0;                //拉低时钟线
+1218   2              Delay5us();             //延时
+C51 COMPILER V9.01   MAIN                                                                  09/25/2013 12:07:03 PAGE 21  
+
+1219   2          }
+1220   1          return dat;
+1221   1      }
+1222          //******单字节写入*******************************************
+1223           
+1224          void Single_Write_ADXL345(uchar REG_Address,uchar REG_data)
+1225          {
+1226   1          ADXL345_Start();                  //起始信号
+1227   1          ADXL345_SendByte(SlaveAddress);   //发送设备地址+写信号
+1228   1          ADXL345_SendByte(REG_Address);    //内部寄存器地址，请参考中文pdf22页 
+1229   1          ADXL345_SendByte(REG_data);       //内部寄存器数据，请参考中文pdf22页 
+1230   1          ADXL345_Stop();                   //发送停止信号
+1231   1      }
+1232          //********单字节读取*****************************************
+1233          uchar Single_Read_ADXL345(uchar REG_Address)
+1234          {  
+1235   1      uchar REG_data;
+1236   1          ADXL345_Start();                          //起始信号
+1237   1          ADXL345_SendByte(SlaveAddress);           //发送设备地址+写信号
+1238   1          ADXL345_SendByte(REG_Address);            //发送存储单元地址，从0开始 
+1239   1          ADXL345_Start();                          //起始信号
+1240   1          ADXL345_SendByte(SlaveAddress+1);         //发送设备地址+读信号
+1241   1          REG_data=ADXL345_RecvByte();              //读出寄存器数据
+1242   1          ADXL345_SendACK(1);   
+1243   1          ADXL345_Stop();                           //停止信号
+1244   1          return REG_data; 
+1245   1      }          
+1246          //*********************************************************
+1247          //连续读出ADXL345内部加速度数据，地址范围0x32~0x37
+1248          //*********************************************************
+1249          void Multiple_read_ADXL345(void)
+1250          {   
+1251   1              uchar i;
+1252   1          ADXL345_Start();                          //起始信号
+1253   1          ADXL345_SendByte(SlaveAddress);           //发送设备地址+写信号
+1254   1          ADXL345_SendByte(0x32);                   //发送存储单元地址，从0x32开始 
+1255   1          ADXL345_Start();                          //起始信号
+1256   1          ADXL345_SendByte(SlaveAddress+1);         //发送设备地址+读信号
+1257   1          for (i=0; i<6; i++)                      //连续读取6个地址数据，存储中BUF
+1258   1          {
+1259   2              BUF[i] = ADXL345_RecvByte();          //BUF[0]存储0x32地址中的数据
+1260   2              if (i == 5)
+1261   2              {
+1262   3                 ADXL345_SendACK(1);                //最后一个数据需要回NOACK
+1263   3              }
+1264   2              else
+1265   2              {
+1266   3                ADXL345_SendACK(0);                //回应ACK
+1267   3              }
+1268   2          }
+1269   1          ADXL345_Stop();                          //停止信号
+1270   1          Delay5ms();
+1271   1      }
+1272          //*****************************************************************
+1273          //初始化ADXL345，根据需要请参考pdf进行修改************************
+1274          void Init_ADXL345()
+1275          {
+1276   1              TMOD|=0x20;
+1277   1              SCON|=0x40;
+1278   1              TH1=0xfd;
+1279   1              TL1=0xfd;
+1280   1              PCON|=0x00;
+C51 COMPILER V9.01   MAIN                                                                  09/25/2013 12:07:03 PAGE 22  
+
+1281   1              TI=0;
+1282   1              RI=0;
+1283   1              TR1=1; 
+1284   1          delay(500);                    //上电延时
+1285   1              //上面这段本在初始化函数前面
+1286   1          Single_Write_ADXL345(0x31,0x0B);   //测量范围,正负16g，13位模式
+1287   1          Single_Write_ADXL345(0x2C,0x08);   //速率设定为12.5 参考pdf13页
+1288   1          Single_Write_ADXL345(0x2D,0x08);   //选择电源模式   参考pdf24页
+1289   1          Single_Write_ADXL345(0x2E,0x80);   //使能 DATA_READY 中断
+1290   1          Single_Write_ADXL345(0x1E,0x00);   //X 偏移量 根据测试传感器的状态写入pdf29页
+1291   1          Single_Write_ADXL345(0x1F,0x00);   //Y 偏移量 根据测试传感器的状态写入pdf29页
+1292   1          Single_Write_ADXL345(0x20,0x05);   //Z 偏移量 根据测试传感器的状态写入pdf29页
+1293   1      }
+1294          void ADXL345_AXYZ(void)
+1295          {
+1296   1              Multiple_Read_ADXL345();        //连续读出数据，存储在BUF中
+1297   1              x_value=(BUF[1]*256)|(BUF[0]);
+1298   1              y_value=(BUF[3]*256)|(BUF[2]);
+1299   1              z_value=(BUF[5]*256)|(BUF[4]);
+1300   1              if(BUF[1]>>7)
+1301   1              {               
+1302   2                      x_value=(0-(0x8000-x_value&0x7fff));    
+1303   2              }
+1304   1              if(BUF[3]>>7)
+1305   1              {       
+1306   2                      y_value=(0-(0x8000-y_value&0x7fff));
+1307   2              }
+1308   1              if(BUF[5]>>7)
+1309   1              {       
+1310   2                      z_value=(0-(0x8000-z_value&0x7fff));
+1311   2              }       
+1312   1      
+1313   1      }
+1314          //ADXL345函数区*******************************************************************************************
+             -***************
+1315          
+1316          //判断函数区**********************************************************************************************
+             -***************
+1317          //模式判断函数
+1318          void judge_mode(void)
+1319          {
+1320   1              if(y_value<(-230)) 
+1321   1              {
+1322   2                      w_static_status++;
+1323   2                      n_static_status=0;
+1324   2                      e_static_status=0;
+1325   2                      s_static_status=0;
+1326   2                      if(w_static_status>=Static_status_num) {w_static_status=Static_status_num;modnum=0;}  
+1327   2                      goto Static_status;
+1328   2              } 
+1329   1              if(x_value>230) 
+1330   1              {
+1331   2                      w_static_status=0;
+1332   2                      n_static_status++;
+1333   2                      e_static_status=0;
+1334   2                      s_static_status=0;
+1335   2                      if(n_static_status>=Static_status_num) {n_static_status=Static_status_num;modnum=1;}  
+1336   2                      goto Static_status;
+1337   2              }
+1338   1              if(y_value>230)
+1339   1              {
+1340   2                      w_static_status=0;
+C51 COMPILER V9.01   MAIN                                                                  09/25/2013 12:07:03 PAGE 23  
+
+1341   2                      n_static_status=0;
+1342   2                      e_static_status++;
+1343   2                      s_static_status=0;
+1344   2                      if(e_static_status>=Static_status_num) {e_static_status=Static_status_num;modnum=2;} 
+1345   2                      goto Static_status;
+1346   2              }  
+1347   1              if(x_value<(-230)) 
+1348   1              {
+1349   2                      w_static_status=0;
+1350   2                      n_static_status=0;
+1351   2                      e_static_status=0;
+1352   2                      s_static_status++;
+1353   2                      if(s_static_status>=Static_status_num) {s_static_status=Static_status_num;modnum=3;} 
+1354   2                      goto Static_status;
+1355   2              }
+1356   1      Static_status: delay_10ms(1);
+1357   1      }
+1358          
+1359          void judge_degree(void)
+1360          {
+1361   1      //modnum=0时
+1362   1              if(modnum==0)
+1363   1              {
+1364   2                      if((y_value>(-221))&&(y_value<(-128))) 
+1365   2                      {
+1366   3                              if((z_value>(-221))&&(z_value<(-128)))  shake_flag=1;
+1367   3                              if((z_value>128)&&(z_value<221))                shake_flag=2;
+1368   3                              if((x_value>128)&&(x_value<221))                shake_flag=3;
+1369   3                              if((x_value>(-221))&&(x_value<(-128)))  shake_flag=4;   
+1370   3                              goto Shake_status;
+1371   3                      } 
+1372   2              }
+1373   1      //modnum=1时
+1374   1              if(modnum==1)
+1375   1              {
+1376   2                      if((x_value>128)&&(x_value<221)) 
+1377   2                      {
+1378   3                              if((z_value>(-221))&&(z_value<(-128)))  shake_flag=1;
+1379   3                              if((z_value>128)&&(z_value<221))                shake_flag=2;
+1380   3                              if((y_value>128)&&(y_value<221))                shake_flag=3;
+1381   3                              if((y_value>(-221))&&(y_value<(-128)))  shake_flag=4;   
+1382   3                              goto Shake_status;
+1383   3                      } 
+1384   2              }
+1385   1      //modnum=2时
+1386   1              if(modnum==2)
+1387   1              {
+1388   2                      if((y_value>128)&&(y_value<221)) 
+1389   2                      {
+1390   3                              if((z_value>(-221))&&(z_value<(-128)))  shake_flag=1;
+1391   3                              if((z_value>128)&&(z_value<221))                shake_flag=2;
+1392   3                              if((x_value>(-221))&&(x_value<(-128)))  shake_flag=3;
+1393   3                              if((x_value>128)&&(x_value<221))                shake_flag=4;   
+1394   3                              goto Shake_status;
+1395   3                      } 
+1396   2              }
+1397   1      //modnum=3时
+1398   1              if(modnum==3)
+1399   1              {
+1400   2                      if((x_value>(-221))&&(x_value<(-128))) 
+1401   2                      {
+1402   3                              if((z_value>(-221))&&(z_value<(-128)))  shake_flag=1;
+C51 COMPILER V9.01   MAIN                                                                  09/25/2013 12:07:03 PAGE 24  
+
+1403   3                              if((z_value>128)&&(z_value<221))                shake_flag=2;
+1404   3                              if((y_value>(-221))&&(y_value<(-128)))  shake_flag=3;
+1405   3                              if((y_value>128)&&(y_value<221))                shake_flag=4;           
+1406   3                              goto Shake_status;
+1407   3                      } 
+1408   2              }
+1409   1      
+1410   1      Shake_status: delay_10ms(1);
+1411   1      }
+1412          void judge_shake(void)
+1413          {
+1414   1              if((x_value>400)||(y_value>400)||(z_value>400)||(x_value<(-400))||(y_value<(-400))||(z_value<(-400)) )
+1415   1              shake_num--;//CHECK_ring_shake=~CHECK_ring_shake;
+1416   1              delay_10ms(1);
+1417   1      }
+1418          //判断函数区**********************************************************************************************
+             -***************
+1419          
+1420          //EEPROM数据读写函数区************************************************************************************
+             -***************
+1421          void E2P_readdata(void)
+1422          {
+1423   1              Ds1302_time_BCD[0]=read_add(0);
+1424   1              delay_1ms(5);
+1425   1              Ds1302_time_BCD[1]=read_add(1);
+1426   1              delay_1ms(5);
+1427   1              Ds1302_time_BCD[2]=read_add(2);
+1428   1              delay_1ms(5);
+1429   1              Ds1302_time_BCD[3]=read_add(3);
+1430   1              delay_1ms(5);
+1431   1              Ds1302_time_BCD[4]=read_add(4);
+1432   1              delay_1ms(5);
+1433   1              Ds1302_time_BCD[6]=read_add(6);
+1434   1              delay_1ms(5);   
+1435   1      
+1436   1              Ds1302_Bell_time_BCD[1]=read_add(7);
+1437   1              delay_1ms(5);
+1438   1              Ds1302_Bell_time_BCD[2]=read_add(8);
+1439   1              delay_1ms(5);
+1440   1      
+1441   1              shake_num_value=read_add(9); 
+1442   1              delay_1ms(5);   
+1443   1              ring_time_BCD=read_add(10);
+1444   1              delay_1ms(5);
+1445   1      }
+1446          //EEPROM数据读写函数区************************************************************************************
+             -***************
+1447          
+1448          void judge_hlir(void)
+1449          {
+1450   1           //BCD处理
+1451   1              Ds1302_time_tmp=(Ds1302_time[1]%16)+(Ds1302_time[1]/16)*10;
+1452   1      
+1453   1              if(Ds1302_time_tmp-Ds1302_Bell_time_BCD[1]>0) 
+1454   1                      ring_time_tmp=ring_time_BCD-(Ds1302_time_tmp-Ds1302_Bell_time_BCD[1]);
+1455   1      
+1456   1              else if(Ds1302_time_tmp-Ds1302_Bell_time_BCD[1]<0) 
+1457   1                      ring_time_tmp=(60-ring_time_BCD)+Ds1302_time_tmp;
+1458   1      
+1459   1              if(ring_time_tmp>60) ring_time_tmp-=60;
+1460   1              delay_1ms(5);
+1461   1      }
+C51 COMPILER V9.01   MAIN                                                                  09/25/2013 12:07:03 PAGE 25  
+
+1462           
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   7075    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =     77    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      5       1
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

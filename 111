@@ -1,0 +1,9 @@
+unsigned char tmp;
+     //BCD´¦Àí
+	tmp=Ds1302_time[1]/16;
+	Ds1302_time_tmp[1]=Ds1302_time[i]%16;
+	Ds1302_time_tmp[1]=Ds1302_time_tmp[i]+tmp*10;
+
+if(Ds1302_time_tmp[i]-Ds1302_Bell_time_BCD[1]>0) ring_time_tmp=ring_time_BCD-(Ds1302_time_tmp[i]-Ds1302_Bell_time_BCD[1]);
+
+else if(Ds1302_time_tmp[i]-Ds1302_Bell_time_BCD[1]<0) ring_time_tmp=(60-ring_time_BCD)+Ds1302_time_tmp[1];
